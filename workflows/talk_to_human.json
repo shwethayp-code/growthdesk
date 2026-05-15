@@ -1,0 +1,200 @@
+{
+  "name": "GrowthDesk - Talk to Human Routing Workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "growthdesk-human",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "node-webhook-human",
+      "name": "Webhook - Human Request",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [240, 340],
+      "webhookId": "growthdesk-human-001",
+      "notes": "Chatbot POSTs here when student clicks Talk to a Human."
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ status: 'human_request_received', ticket_id: $json.ticket_id, message: 'Your request has been sent to our team. We will respond within 2-3 hours.' }) }}",
+        "options": {}
+      },
+      "id": "node-respond-human",
+      "name": "Respond to Chatbot",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [460, 220]
+    },
+    {
+      "parameters": {
+        "jsCode": "const body = $input.first().json.body || $input.first().json;\nconst now = new Date();\nconst ticketId = body.ticket_id || ('HUM-' + Date.now().toString().slice(-6));\nconst hour = now.getHours();\nconst isWorkingHours = hour >= 9 && hour < 19;\nconst waitTime = isWorkingHours ? '2-3 hours' : 'next business day (9AM IST)';\nconst leadScore = body.lead_score || 0;\nconst isPriorityLead = leadScore >= 80 || (body.pcm_percentage || 0) >= 85 || body.interest_level === 'High';\nreturn [{\n  json: {\n    ticket_id: ticketId,\n    student_name: body.student_name || 'Unknown Student',\n    student_email: body.student_email || '',\n    city: body.city || 'Unknown',\n    target_exam: body.target_exam || 'JEE/CET',\n    student_message: body.message || '',\n    reason_for_human: body.reason || 'Student requested human support',\n    lead_score: leadScore,\n    pcm_percentage: body.pcm_percentage || 0,\n    interest_level: body.interest_level || 'Unknown',\n    source: body.source || 'Chatbot',\n    stage: body.stage || 'Lead',\n    is_priority_lead: isPriorityLead,\n    is_working_hours: isWorkingHours,\n    wait_time: waitTime,\n    raised_at: now.toISOString(),\n    raised_at_readable: now.toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' }),\n    assigned_to: isPriorityLead ? 'Senior Support (Senior Support)' : 'Support Team'\n  }\n}];"
+      },
+      "id": "node-prepare-human",
+      "name": "Prepare Human Request Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [460, 460],
+      "notes": "Detects working hours, priority lead status, and assigns to right agent."
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {},
+          "conditions": [
+            {
+              "id": "cond-priority",
+              "leftValue": "={{ $json.is_priority_lead }}",
+              "rightValue": true,
+              "operator": { "type": "boolean", "operation": "true" }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "node-if-priority",
+      "name": "Priority Lead?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [700, 460],
+      "notes": "Priority = Lead score >= 80, PCM >= 85%, or High interest. These get immediate senior agent attention."
+    },
+    {
+      "parameters": {
+        "sendTo": "admin@yourdomain.com",
+        "subject": "=⭐ PRIORITY LEAD wants Human Support | {{ $json.ticket_id }} | {{ $json.student_name }} - {{ $json.city }}",
+        "message": "=<h2 style='color:#8e44ad'>Priority Lead — Human Support Requested</h2>\n<p style='background:#f5eef8;padding:10px;border-left:4px solid #8e44ad'><b>This is a high-potential student (Lead Score: {{ $json.lead_score }}, PCM: {{ $json.pcm_percentage }}%). They want to talk to a human. Converting them could mean ₹40,000–₹80,000 in enrollment. Respond fast.</b></p>\n<table border='1' cellpadding='8' cellspacing='0' style='border-collapse:collapse;font-family:Arial;width:100%'>\n<tr><td><b>Ticket ID</b></td><td>{{ $json.ticket_id }}</td></tr>\n<tr><td><b>Student</b></td><td>{{ $json.student_name }}</td></tr>\n<tr><td><b>City</b></td><td>{{ $json.city }}</td></tr>\n<tr><td><b>Target Exam</b></td><td>{{ $json.target_exam }}</td></tr>\n<tr><td><b>Lead Score</b></td><td><b>{{ $json.lead_score }}/100</b></td></tr>\n<tr><td><b>PCM %</b></td><td>{{ $json.pcm_percentage }}%</td></tr>\n<tr><td><b>Interest Level</b></td><td>{{ $json.interest_level }}</td></tr>\n<tr><td><b>Pipeline Stage</b></td><td>{{ $json.stage }}</td></tr>\n<tr><td><b>Source</b></td><td>{{ $json.source }}</td></tr>\n<tr><td><b>Student Message</b></td><td>{{ $json.student_message }}</td></tr>\n<tr><td><b>Raised At</b></td><td>{{ $json.raised_at_readable }}</td></tr>\n<tr><td><b>Working Hours?</b></td><td>{{ $json.is_working_hours ? 'Yes — respond now' : 'No — respond first thing 9AM' }}</td></tr>\n<tr><td><b>Assigned To</b></td><td><b>{{ $json.assigned_to }}</b></td></tr>\n</table>\n<br>\n<p><b>Recommended Actions:</b></p>\n<ul>\n<li>Senior Support: Call or email student within 1 hour (priority)</li>\n<li>Notify Lead Scoring Team: This lead needs re-scoring after call</li>\n<li>Notify Outreach Team: Trigger personalised outreach sequence</li>\n<li>If student enrolls: Notify Commercial Team for commercial workflow</li>\n</ul>",
+        "options": {
+          "appendAttribution": false,
+          "replyTo": "admin@yourdomain.com"
+        }
+      },
+      "id": "node-email-priority-human",
+      "name": "Email Team - Priority Human Request",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [940, 300],
+      "credentials": { "gmailOAuth2": { "id": "gmail-cred-1", "name": "Gmail GrowthDesk" } }
+    },
+    {
+      "parameters": {
+        "sendTo": "admin@yourdomain.com",
+        "subject": "=💬 Human Support Requested | {{ $json.ticket_id }} | {{ $json.student_name }} - {{ $json.city }}",
+        "message": "=<h2 style='color:#2980b9'>Student Requested Human Support</h2>\n<table border='1' cellpadding='8' cellspacing='0' style='border-collapse:collapse;font-family:Arial;width:100%'>\n<tr><td><b>Ticket ID</b></td><td>{{ $json.ticket_id }}</td></tr>\n<tr><td><b>Student</b></td><td>{{ $json.student_name }}</td></tr>\n<tr><td><b>City</b></td><td>{{ $json.city }}</td></tr>\n<tr><td><b>Target Exam</b></td><td>{{ $json.target_exam }}</td></tr>\n<tr><td><b>Lead Score</b></td><td>{{ $json.lead_score }}/100</td></tr>\n<tr><td><b>Student Message</b></td><td>{{ $json.student_message }}</td></tr>\n<tr><td><b>Raised At</b></td><td>{{ $json.raised_at_readable }}</td></tr>\n<tr><td><b>Expected Wait</b></td><td>{{ $json.wait_time }}</td></tr>\n<tr><td><b>Assigned To</b></td><td>{{ $json.assigned_to }}</td></tr>\n</table>\n<br>\n<p>Please respond to this student within 2-3 hours during working hours (9AM-7PM IST).</p>",
+        "options": { "appendAttribution": false }
+      },
+      "id": "node-email-standard-human",
+      "name": "Email Team - Standard Human Request",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [940, 620],
+      "credentials": { "gmailOAuth2": { "id": "gmail-cred-1", "name": "Gmail GrowthDesk" } }
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $json.student_email }}",
+        "subject": "=A real human is on the way! | {{ $json.ticket_id }} | GrowthDesk",
+        "message": "=<h2 style='color:#27ae60'>Hi {{ $json.student_name }}, our team is on it! 👋</h2>\n<p>You've requested to speak with a human agent. Our support team has been notified and will reach out to you shortly.</p>\n<table border='1' cellpadding='8' cellspacing='0' style='border-collapse:collapse;font-family:Arial'>\n<tr><td><b>Ticket ID</b></td><td><b>{{ $json.ticket_id }}</b></td></tr>\n<tr><td><b>Status</b></td><td>Assigned to Support Team</td></tr>\n<tr><td><b>Expected Response</b></td><td>{{ $json.wait_time }}</td></tr>\n<tr><td><b>Working Hours</b></td><td>Monday–Saturday, 9:00 AM – 7:00 PM IST</td></tr>\n</table>\n<br>\n<p>While you wait, here's a quick tip for your {{ $json.target_exam }} preparation: <b>{{ $json.target_exam === 'JEE' ? 'Solve at least 10 previous year problems daily — consistency beats cramming every time!' : 'Focus on speed and accuracy — practice CET mock tests timed to the minute!' }}</b></p>\n<br>\n<p>You're doing great — keep going! 💪</p>\n<p>Best wishes,<br><b>GrowthDesk Student Support Team</b></p>",
+        "options": { "appendAttribution": false }
+      },
+      "id": "node-email-student-human-ack",
+      "name": "Email Student - Human Request ACK",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [1180, 460],
+      "credentials": { "gmailOAuth2": { "id": "gmail-cred-1", "name": "Gmail GrowthDesk" } }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Notify Lead Scoring Team's Lead Scoring module about this warm lead\n// In production: POST to Lead Scoring Team's lead scoring webhook\nconst data = $input.first().json;\nconsole.log('[GrowthDesk] Notifying lead scoring module:', data.student_name, 'Score:', data.lead_score);\nreturn [{\n  json: {\n    forwarded_to: 'Lead Scoring Module (Lead Scoring Team)',\n    student_name: data.student_name,\n    lead_score: data.lead_score,\n    action: 'Human contact requested — re-score after call',\n    webhook_to_call: 'POST https://your-n8n-domain/webhook/growthdesk-lead-score',\n    payload: {\n      student_name: data.student_name,\n      city: data.city,\n      target_exam: data.target_exam,\n      trigger: 'human_request',\n      current_score: data.lead_score\n    }\n  }\n}];"
+      },
+      "id": "node-notify-lead-scoring",
+      "name": "Notify Lead Scoring (Lead Scoring Team)",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1180, 680],
+      "notes": "Replace with HTTP Request node to POST to Lead Scoring Team's lead scoring webhook."
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [{ "field": "hours", "hoursInterval": 3 }]
+        }
+      },
+      "id": "node-cron-unresponded",
+      "name": "Cron - Check Unresponded Every 3hrs",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [240, 820],
+      "notes": "Every 3 hours checks for human requests that have not been responded to."
+    },
+    {
+      "parameters": {
+        "jsCode": "// Replace with Postgres node\n// Query: SELECT * FROM tickets WHERE query_type='Human Request'\n// AND status='Open' AND raised_at < NOW() - INTERVAL '3 hours'\nconst now = new Date();\nreturn [{\n  json: {\n    check_time: now.toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' }),\n    db_query: \"SELECT ticket_id, student_name, student_email, city, lead_score FROM tickets WHERE query_type='Human Request' AND status='Open' AND raised_at < NOW() - INTERVAL '3 hours' ORDER BY lead_score DESC\",\n    note: 'Replace with Postgres node. Returns unresponded human requests sorted by lead score.'\n  }\n}];"
+      },
+      "id": "node-fetch-unresponded",
+      "name": "Fetch Unresponded Human Requests",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [460, 820],
+      "notes": "Replace with Postgres node to query real DB."
+    },
+    {
+      "parameters": {
+        "sendTo": "admin@yourdomain.com",
+        "subject": "=⏰ Unresponded Human Requests | 3-Hour Check | GrowthDesk",
+        "message": "=<h2 style='color:#e67e22'>Unresponded Human Support Requests</h2>\n<p>The following human support requests have not been responded to in over 3 hours:</p>\n<p><b>Check Time:</b> {{ $json.check_time }}</p>\n<br>\n<p style='background:#fef9e7;padding:10px;border-left:4px solid #f39c12'>\n<b>DB Query to find unresponded tickets:</b><br>\n<code>{{ $json.db_query }}</code>\n</p>\n<br>\n<p><b>Action Required:</b></p>\n<ul>\n<li>Senior Support: Contact all unresponded students immediately</li>\n<li>Priority: Sort by Lead Score (highest first)</li>\n<li>Operations Lead: Update PMO tracker with response status</li>\n<li>Target: Zero unresponded human requests at end of day</li>\n</ul>\n<p style='color:#e74c3c'>Note: Unresponded human requests are the #1 reason for lost enrollments in our dataset.</p>",
+        "options": { "appendAttribution": false }
+      },
+      "id": "node-email-unresponded",
+      "name": "Email Team - Unresponded Alert",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [700, 820],
+      "credentials": { "gmailOAuth2": { "id": "gmail-cred-1", "name": "Gmail GrowthDesk" } }
+    }
+  ],
+  "connections": {
+    "Webhook - Human Request": {
+      "main": [[
+        { "node": "Respond to Chatbot", "type": "main", "index": 0 },
+        { "node": "Prepare Human Request Data", "type": "main", "index": 0 }
+      ]]
+    },
+    "Prepare Human Request Data": {
+      "main": [[{ "node": "Priority Lead?", "type": "main", "index": 0 }]]
+    },
+    "Priority Lead?": {
+      "main": [
+        [{ "node": "Email Team - Priority Human Request", "type": "main", "index": 0 }],
+        [{ "node": "Email Team - Standard Human Request", "type": "main", "index": 0 }]
+      ]
+    },
+    "Email Team - Priority Human Request": {
+      "main": [[
+        { "node": "Email Student - Human Request ACK", "type": "main", "index": 0 },
+        { "node": "Notify Lead Scoring (Lead Scoring Team)", "type": "main", "index": 0 }
+      ]]
+    },
+    "Email Team - Standard Human Request": {
+      "main": [[{ "node": "Email Student - Human Request ACK", "type": "main", "index": 0 }]]
+    },
+    "Cron - Check Unresponded Every 3hrs": {
+      "main": [[{ "node": "Fetch Unresponded Human Requests", "type": "main", "index": 0 }]]
+    },
+    "Fetch Unresponded Human Requests": {
+      "main": [[{ "node": "Email Team - Unresponded Alert", "type": "main", "index": 0 }]]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "tags": ["GrowthDesk", "Human Routing", "Customer Support", "EdTech"],
+  "versionId": "growthdesk-human-v1"
+}

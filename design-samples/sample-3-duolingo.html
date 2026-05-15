@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GrowthDesk · Sample 3 — Duolingo Friendly</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@500;700;800;900&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --green:#58CC02;
+  --green-dark:#46A302;
+  --green-soft:#E5F8D5;
+  --blue:#1CB0F6;
+  --blue-dark:#1899D6;
+  --blue-soft:#DDF4FE;
+  --pink:#FF6FAE;
+  --pink-soft:#FFE4F0;
+  --yellow:#FFC800;
+  --yellow-soft:#FFF4CC;
+  --purple:#CE82FF;
+  --purple-soft:#F5E5FF;
+  --orange:#FF9600;
+  --ink:#2B2D42;
+  --slate:#777889;
+  --cream:#FFFDF7;
+  --border:#EFEDE5;
+}
+html,body{
+  background:var(--cream);
+  color:var(--ink);
+  font-family:'DM Sans',sans-serif;
+  font-size:16px;line-height:1.6;
+  -webkit-font-smoothing:antialiased;
+}
+.display{font-family:'Nunito',sans-serif;font-weight:900;letter-spacing:-0.02em}
+
+/* NAV */
+.nav{
+  height:78px;display:flex;align-items:center;justify-content:space-between;
+  padding:0 56px;background:var(--cream);
+  position:sticky;top:0;z-index:100;
+  border-bottom:2px solid var(--border);
+}
+.logo{display:flex;align-items:center;gap:12px;font-family:'Nunito',sans-serif;font-weight:900;font-size:24px;color:var(--green-dark);letter-spacing:-0.5px}
+.logo-mark{
+  width:42px;height:42px;border-radius:14px;
+  background:var(--green);color:#fff;
+  display:flex;align-items:center;justify-content:center;
+  font-weight:900;font-size:20px;
+  box-shadow:0 4px 0 var(--green-dark);
+}
+.logo .accent{color:var(--blue-dark)}
+.nav-links{display:flex;gap:6px}
+.nav-links a{
+  color:var(--ink);text-decoration:none;font-size:15px;
+  padding:10px 18px;border-radius:14px;font-weight:700;transition:all .12s;
+}
+.nav-links a:hover{background:var(--green-soft);color:var(--green-dark)}
+.nav-cta{
+  background:var(--green);color:#fff;
+  padding:12px 24px;border-radius:14px;font-weight:800;font-size:15px;
+  text-decoration:none;border:none;cursor:pointer;
+  box-shadow:0 4px 0 var(--green-dark);transition:all .08s;
+  text-transform:uppercase;letter-spacing:0.04em;font-family:'Nunito',sans-serif;
+}
+.nav-cta:hover{transform:translateY(2px);box-shadow:0 2px 0 var(--green-dark)}
+
+/* HERO */
+.hero{padding:60px 56px 90px;max-width:1280px;margin:0 auto}
+.hero-grid{display:grid;grid-template-columns:1.1fr 1fr;gap:48px;align-items:center}
+.hero h1{
+  font-family:'Nunito',sans-serif;font-weight:900;
+  font-size:62px;line-height:1.05;letter-spacing:-2px;
+  margin-bottom:20px;color:var(--ink);
+}
+.hero h1 .word-pop{
+  background:var(--yellow);color:var(--ink);
+  padding:0 12px;border-radius:14px;display:inline-block;
+  box-shadow:0 4px 0 var(--orange);transform:rotate(-2deg);margin:0 4px;
+}
+.hero h1 .word-blue{color:var(--blue-dark)}
+.hero h1 .word-green{color:var(--green-dark)}
+.hero p.lede{font-size:18px;color:var(--slate);max-width:520px;line-height:1.65;margin-bottom:36px;font-weight:500}
+.cta-row{display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+.btn{
+  padding:16px 32px;border-radius:16px;font-weight:800;font-size:15px;cursor:pointer;
+  border:none;transition:all .08s;text-decoration:none;display:inline-flex;align-items:center;gap:8px;
+  text-transform:uppercase;letter-spacing:0.05em;font-family:'Nunito',sans-serif;
+}
+.btn-primary{background:var(--green);color:#fff;box-shadow:0 4px 0 var(--green-dark)}
+.btn-primary:hover{transform:translateY(2px);box-shadow:0 2px 0 var(--green-dark)}
+.btn-ghost{background:#fff;color:var(--ink);box-shadow:0 4px 0 var(--border)}
+.btn-ghost:hover{transform:translateY(2px);box-shadow:0 2px 0 var(--border)}
+
+/* MASCOT QUIZ CARD */
+.quiz-card{
+  background:#fff;border-radius:24px;padding:32px;border:2px solid var(--border);
+  box-shadow:0 6px 0 var(--border);position:relative;
+}
+.quiz-card-tag{
+  display:inline-flex;align-items:center;gap:8px;
+  background:var(--blue-soft);color:var(--blue-dark);
+  font-size:12px;font-weight:800;padding:6px 12px;border-radius:100px;
+  text-transform:uppercase;letter-spacing:0.06em;font-family:'Nunito',sans-serif;
+  margin-bottom:18px;
+}
+.quiz-card-tag .live{width:8px;height:8px;border-radius:50%;background:var(--blue)}
+.quiz-card h3{
+  font-family:'Nunito',sans-serif;font-weight:800;font-size:22px;line-height:1.3;
+  color:var(--ink);margin-bottom:20px;letter-spacing:-0.4px;
+}
+.quiz-question{
+  background:var(--green-soft);border-radius:14px;padding:18px;margin-bottom:14px;
+  border:2px solid #C8EBA0;
+}
+.quiz-question .label{
+  font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:0.1em;
+  color:var(--green-dark);margin-bottom:6px;font-family:'Nunito',sans-serif;
+}
+.quiz-question .q{font-weight:700;color:var(--ink);font-size:15px;line-height:1.4}
+.quiz-options{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
+.quiz-option{
+  background:#fff;border:2px solid var(--border);border-radius:12px;
+  padding:14px;font-weight:700;font-size:14px;color:var(--ink);
+  text-align:center;cursor:pointer;transition:all .08s;
+  box-shadow:0 3px 0 var(--border);
+}
+.quiz-option:hover{border-color:var(--blue);background:var(--blue-soft);transform:translateY(2px);box-shadow:0 1px 0 var(--blue-soft)}
+.quiz-option.correct{border-color:var(--green);background:var(--green-soft);box-shadow:0 3px 0 var(--green)}
+.quiz-progress{display:flex;gap:6px;margin-top:20px}
+.quiz-progress .seg{flex:1;height:8px;border-radius:6px;background:var(--border)}
+.quiz-progress .seg.done{background:var(--green)}
+.quiz-progress .seg.active{background:var(--blue)}
+.quiz-streak{
+  display:flex;align-items:center;gap:8px;margin-top:18px;
+  background:var(--yellow-soft);border:2px solid #FFE588;border-radius:12px;padding:10px 14px;
+}
+.quiz-streak-icon{width:24px;height:24px;background:var(--orange);border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:900;color:#fff;font-size:14px}
+.quiz-streak .text{font-size:13px;font-weight:700;color:#7A4F00}
+
+/* FEATURE STRIP */
+.features{padding:80px 56px;max-width:1280px;margin:0 auto}
+.features-eyebrow{
+  display:inline-flex;align-items:center;gap:8px;
+  background:var(--pink-soft);color:#A8235E;
+  padding:6px 14px;border-radius:100px;
+  font-size:12px;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;
+  font-family:'Nunito',sans-serif;margin-bottom:20px;
+}
+.features h2{
+  font-family:'Nunito',sans-serif;font-weight:900;font-size:48px;letter-spacing:-1.5px;line-height:1.1;
+  margin-bottom:14px;color:var(--ink);
+}
+.features p.sub{font-size:17px;color:var(--slate);max-width:560px;margin-bottom:48px;font-weight:500}
+.feature-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+.feature-card{
+  background:#fff;border:2px solid var(--border);border-radius:20px;padding:28px;
+  box-shadow:0 5px 0 var(--border);transition:all .1s;
+}
+.feature-card:hover{transform:translateY(-3px);box-shadow:0 8px 0 var(--border)}
+.feature-icon{
+  width:56px;height:56px;border-radius:18px;
+  display:flex;align-items:center;justify-content:center;
+  margin-bottom:20px;
+}
+.feature-icon.green{background:var(--green-soft);color:var(--green-dark)}
+.feature-icon.blue{background:var(--blue-soft);color:var(--blue-dark)}
+.feature-icon.pink{background:var(--pink-soft);color:#A8235E}
+.feature-icon svg{width:28px;height:28px}
+.feature-card h3{
+  font-family:'Nunito',sans-serif;font-weight:900;font-size:20px;letter-spacing:-0.4px;
+  color:var(--ink);margin-bottom:8px;
+}
+.feature-card p{font-size:14px;color:var(--slate);line-height:1.6;font-weight:500}
+.feature-meta{
+  display:inline-block;margin-top:14px;font-size:11px;font-weight:800;color:var(--green-dark);
+  letter-spacing:0.06em;text-transform:uppercase;font-family:'Nunito',sans-serif;
+}
+
+/* STREAK STRIP */
+.streak{
+  background:var(--yellow);padding:30px 56px;
+  display:flex;justify-content:space-around;align-items:center;flex-wrap:wrap;gap:32px;
+  border-top:3px solid var(--orange);border-bottom:3px solid var(--orange);
+}
+.streak-item{
+  display:flex;align-items:center;gap:14px;
+  font-family:'Nunito',sans-serif;font-weight:900;color:var(--ink);font-size:18px;
+}
+.streak-num{
+  font-size:36px;line-height:1;letter-spacing:-1.5px;
+}
+.streak-icon{
+  width:44px;height:44px;border-radius:14px;background:#fff;
+  display:flex;align-items:center;justify-content:center;font-size:22px;
+  box-shadow:0 3px 0 rgba(0,0,0,0.12);
+}
+.streak-label{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:#7A4F00}
+
+@media(max-width:900px){
+  .hero-grid{grid-template-columns:1fr;gap:40px}
+  .hero h1{font-size:42px;letter-spacing:-1.2px}
+  .features h2{font-size:32px;letter-spacing:-1px}
+  .feature-grid{grid-template-columns:1fr}
+  .nav-links{display:none}
+  .hero,.features,.streak{padding-left:24px;padding-right:24px}
+  .nav{padding:0 24px}
+}
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="logo"><span class="logo-mark">G</span>Growth<span class="accent">Desk</span></div>
+  <div class="nav-links">
+    <a href="#">Quiz</a>
+    <a href="#">Courses</a>
+    <a href="#">Leaderboard</a>
+    <a href="#">For Coaches</a>
+  </div>
+  <a href="#" class="nav-cta">Start free →</a>
+</nav>
+
+<section class="hero">
+  <div class="hero-grid">
+    <div>
+      <h1>JEE prep that actually <span class="word-pop">feels good</span> to do every day.</h1>
+      <p class="lede">A 5-minute quiz that scores your readiness. A study plan that adjusts to where you struggle. And a coach who actually replies. Built for students. Loved by coaching institutes.</p>
+      <div class="cta-row">
+        <a href="#" class="btn btn-primary">Take the quiz</a>
+        <a href="#" class="btn btn-ghost">For institutes</a>
+      </div>
+      <div style="margin-top:32px;display:flex;gap:18px;align-items:center">
+        <div style="display:flex;margin-left:0">
+          <div style="width:36px;height:36px;border-radius:50%;background:var(--pink);border:3px solid var(--cream);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:13px;font-family:'Nunito',sans-serif">A</div>
+          <div style="width:36px;height:36px;border-radius:50%;background:var(--blue);border:3px solid var(--cream);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:13px;font-family:'Nunito',sans-serif;margin-left:-10px">P</div>
+          <div style="width:36px;height:36px;border-radius:50%;background:var(--purple);border:3px solid var(--cream);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:13px;font-family:'Nunito',sans-serif;margin-left:-10px">K</div>
+          <div style="width:36px;height:36px;border-radius:50%;background:var(--orange);border:3px solid var(--cream);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:13px;font-family:'Nunito',sans-serif;margin-left:-10px">R</div>
+        </div>
+        <div style="font-size:13px;color:var(--slate);font-weight:600">
+          <strong style="color:var(--ink);font-weight:800">2,400+ students</strong> studying right now.
+        </div>
+      </div>
+    </div>
+
+    <div class="quiz-card">
+      <div class="quiz-card-tag"><span class="live"></span> Live mock test</div>
+      <h3>Diagnostic quiz · question 4 of 9</h3>
+      <div class="quiz-question">
+        <div class="label">Physics · kinematics</div>
+        <div class="q">A ball is thrown vertically upward with velocity 20 m/s. What is its maximum height? (g = 10 m/s²)</div>
+        <div class="quiz-options">
+          <div class="quiz-option">10 m</div>
+          <div class="quiz-option correct">20 m ✓</div>
+          <div class="quiz-option">30 m</div>
+          <div class="quiz-option">40 m</div>
+        </div>
+      </div>
+      <div class="quiz-progress">
+        <div class="seg done"></div>
+        <div class="seg done"></div>
+        <div class="seg done"></div>
+        <div class="seg active"></div>
+        <div class="seg"></div>
+        <div class="seg"></div>
+        <div class="seg"></div>
+        <div class="seg"></div>
+        <div class="seg"></div>
+      </div>
+      <div class="quiz-streak">
+        <div class="quiz-streak-icon">3</div>
+        <div class="text">3-question streak! Keep going to unlock your readiness score 🎯</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="streak">
+  <div class="streak-item">
+    <div class="streak-icon">🔥</div>
+    <div>
+      <div class="streak-num">9-day</div>
+      <div class="streak-label">study streak</div>
+    </div>
+  </div>
+  <div class="streak-item">
+    <div class="streak-icon">⚡</div>
+    <div>
+      <div class="streak-num">147</div>
+      <div class="streak-label">XP earned today</div>
+    </div>
+  </div>
+  <div class="streak-item">
+    <div class="streak-icon">🎯</div>
+    <div>
+      <div class="streak-num">Top 8%</div>
+      <div class="streak-label">in your batch</div>
+    </div>
+  </div>
+  <div class="streak-item">
+    <div class="streak-icon">🏆</div>
+    <div>
+      <div class="streak-num">12</div>
+      <div class="streak-label">badges unlocked</div>
+    </div>
+  </div>
+</div>
+
+<section class="features">
+  <span class="features-eyebrow">★ Why students stay</span>
+  <h2>Practice that feels<br>like progress.</h2>
+  <p class="sub">Streaks. Badges. Adaptive quizzes that get smarter with you. The same gamification that keeps you on Duolingo for 600 days — pointed at your JEE rank.</p>
+  <div class="feature-grid">
+    <div class="feature-card">
+      <div class="feature-icon green"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg></div>
+      <h3>Adaptive learning</h3>
+      <p>Get more questions on what you're weak at, fewer on what you've mastered. The plan rebuilds itself every week.</p>
+      <div class="feature-meta">+ 27% improvement in 30 days</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon blue"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/></svg></div>
+      <h3>Streaks &amp; XP</h3>
+      <p>Show up every day, earn XP. Hit a 7-day streak, unlock a badge. The grind feels less grindy when there's a number going up.</p>
+      <div class="feature-meta">82% daily active rate</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon pink"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 14l9-5-9-5-9 5 9 5z"/><path stroke-linecap="round" stroke-linejoin="round" d="M12 14l6.16-3.422a12 12 0 01.665 6.479A11.95 11.95 0 0012 20.055a11.95 11.95 0 00-6.824-2.998 12 12 0 01.665-6.479L12 14z"/></svg></div>
+      <h3>Real coach replies</h3>
+      <p>Stuck on a problem at 11pm? Tap "Talk to human" — a real counsellor responds within 2 hours. No bot loops.</p>
+      <div class="feature-meta">2.1hr avg response time</div>
+    </div>
+  </div>
+</section>
+
+</body>
+</html>

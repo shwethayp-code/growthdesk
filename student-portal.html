@@ -1,0 +1,839 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GrowthDesk – Student Portal</title>
+<style>
+/* ===== RESET ===== */
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{
+  --primary:#4F46E5;--primary-dark:#3730A3;--primary-light:#EEF2FF;
+  --accent:#10B981;--warn:#F59E0B;--danger:#EF4444;
+  --dark:#1E1B4B;--gray:#6B7280;--light:#F9FAFB;--border:#E5E7EB;
+}
+body{font-family:'Segoe UI',sans-serif;background:var(--light);color:#1F2937;min-height:100vh;}
+input,select,textarea,button{font-family:inherit;}
+.page{display:none;min-height:100vh;}
+.page.active{display:block;}
+.btn{padding:10px 22px;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;border:none;transition:all .18s;}
+.btn-primary{background:var(--primary);color:#fff;}
+.btn-primary:hover{background:var(--primary-dark);}
+.btn-outline{background:#fff;color:var(--primary);border:2px solid var(--primary);}
+.btn-accent{background:var(--accent);color:#fff;}
+.btn-sm{padding:6px 14px;font-size:12px;}
+.badge{display:inline-block;padding:3px 11px;border-radius:20px;font-size:11px;font-weight:600;}
+.badge-green{background:#D1FAE5;color:#065F46;}
+.badge-blue{background:#DBEAFE;color:#1E40AF;}
+.badge-yellow{background:#FEF3C7;color:#92400E;}
+.badge-red{background:#FEE2E2;color:#991B1B;}
+.badge-purple{background:#EDE9FE;color:#5B21B6;}
+.form-control{width:100%;padding:11px 14px;border:1.5px solid var(--border);border-radius:8px;font-size:14px;color:#1F2937;outline:none;background:#fff;transition:border-color .15s;}
+.form-control:focus{border-color:var(--primary);}
+
+/* ============================================================
+   LOGIN PAGE
+============================================================ */
+.login-page{background:linear-gradient(135deg,#1E1B4B 0%,#312E81 50%,#1E1B4B 100%);display:flex;align-items:center;justify-content:center;min-height:100vh;padding:20px;}
+.login-wrap{display:grid;grid-template-columns:1fr 1fr;gap:0;max-width:860px;width:100%;border-radius:22px;overflow:hidden;box-shadow:0 30px 80px rgba(0,0,0,0.4);}
+.login-left{background:linear-gradient(160deg,#4F46E5,#7C3AED,#10B981);padding:44px 38px;color:#fff;display:flex;flex-direction:column;justify-content:space-between;}
+.login-left-logo{font-size:24px;font-weight:900;margin-bottom:40px;}
+.login-left-title{font-size:32px;font-weight:800;line-height:1.2;margin-bottom:14px;}
+.login-left-sub{font-size:15px;opacity:.8;line-height:1.6;margin-bottom:40px;}
+.login-left-stats{display:flex;gap:24px;}
+.stat-box{text-align:center;}
+.stat-val{font-size:26px;font-weight:800;}
+.stat-label{font-size:11px;opacity:.7;margin-top:2px;}
+.login-right{background:#fff;padding:44px 38px;display:flex;flex-direction:column;justify-content:center;}
+.login-right-title{font-size:22px;font-weight:800;color:var(--dark);margin-bottom:4px;}
+.login-right-sub{font-size:13px;color:var(--gray);margin-bottom:26px;}
+.form-group{margin-bottom:16px;}
+.form-label{display:block;font-size:13px;font-weight:600;color:#374151;margin-bottom:5px;}
+.hint-box{background:#EEF2FF;border-radius:8px;padding:12px 14px;font-size:12px;color:var(--primary);margin-bottom:18px;line-height:1.7;}
+.hint-box strong{display:block;margin-bottom:4px;}
+.error-box{background:#FEE2E2;border-radius:8px;padding:10px 14px;font-size:12px;color:var(--danger);margin-bottom:12px;display:none;}
+.divider{border:none;border-top:1px solid var(--border);margin:18px 0;}
+.back-text{font-size:12px;color:var(--gray);text-align:center;margin-top:14px;}
+.back-text a{color:var(--primary);font-weight:600;cursor:pointer;}
+
+/* ============================================================
+   STUDENT PROFILE PAGE
+============================================================ */
+.profile-nav{background:var(--dark);color:#fff;padding:0 32px;height:60px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;}
+.profile-nav-logo{font-size:18px;font-weight:800;}
+.profile-nav-right{display:flex;align-items:center;gap:14px;}
+.student-name-badge{display:flex;align-items:center;gap:8px;font-size:13px;}
+.student-avatar{width:32px;height:32px;border-radius:50%;background:var(--primary);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;}
+.profile-body{max-width:1050px;margin:0 auto;padding:28px 24px;}
+
+/* HERO CARD */
+.profile-hero{background:linear-gradient(135deg,var(--primary),#7C3AED);border-radius:18px;padding:28px 32px;color:#fff;display:flex;align-items:center;gap:24px;margin-bottom:24px;position:relative;overflow:hidden;}
+.profile-hero::after{content:'🎓';position:absolute;right:24px;top:50%;transform:translateY(-50%);font-size:80px;opacity:.12;}
+.hero-avatar{width:64px;height:64px;border-radius:50%;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:800;flex-shrink:0;}
+.hero-name{font-size:22px;font-weight:800;}
+.hero-id{font-size:12px;opacity:.75;margin-top:2px;}
+.hero-tags{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;}
+.hero-tag{background:rgba(255,255,255,.18);padding:3px 12px;border-radius:20px;font-size:12px;font-weight:600;}
+.hero-right{margin-left:auto;text-align:right;}
+.hero-score-label{font-size:11px;opacity:.75;}
+.hero-score-val{font-size:36px;font-weight:900;}
+
+/* CARDS */
+.cards-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:22px;}
+.info-card{background:#fff;border-radius:14px;border:1px solid var(--border);padding:18px 20px;}
+.info-card-title{font-size:11px;color:var(--gray);font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px;display:flex;align-items:center;gap:6px;}
+.info-row{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid #F3F4F6;font-size:13px;}
+.info-row:last-child{border-bottom:none;}
+.info-key{color:var(--gray);}
+.info-val{font-weight:600;color:var(--dark);}
+
+/* TICKET HISTORY */
+.ticket-card{background:#fff;border-radius:14px;border:1px solid var(--border);padding:18px 20px;margin-bottom:16px;}
+.ticket-card-title{font-size:13px;font-weight:700;color:var(--dark);margin-bottom:14px;display:flex;align-items:center;justify-content:space-between;gap:8px;}
+.ticket-item{display:flex;gap:14px;padding:12px 0;border-bottom:1px solid #F3F4F6;}
+.ticket-item:last-child{border-bottom:none;}
+.tkt-icon{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;}
+.tkt-body{flex:1;}
+.tkt-id{font-size:11px;color:var(--gray);font-weight:600;}
+.tkt-msg{font-size:13px;color:var(--dark);font-weight:500;margin:2px 0;}
+.tkt-meta{display:flex;gap:8px;align-items:center;margin-top:4px;}
+.tkt-time{font-size:11px;color:#9CA3AF;}
+.empty-state{text-align:center;padding:32px;color:var(--gray);font-size:13px;}
+.empty-icon{font-size:40px;margin-bottom:10px;}
+
+/* SUPPORT BUTTON */
+.support-fab{position:fixed;bottom:28px;right:28px;background:linear-gradient(135deg,var(--primary),#7C3AED);color:#fff;border:none;border-radius:50px;padding:14px 22px;font-size:14px;font-weight:700;cursor:pointer;box-shadow:0 8px 24px rgba(79,70,229,.4);z-index:9999;display:flex;align-items:center;gap:8px;transition:transform .2s;}
+.support-fab:hover{transform:scale(1.05);}
+.fab-pulse{width:10px;height:10px;border-radius:50%;background:#10B981;animation:pulse 1.5s infinite;}
+@keyframes pulse{0%,100%{transform:scale(1);opacity:1;}50%{transform:scale(1.4);opacity:.7;}}
+
+/* ============================================================
+   CHATBOT MODAL
+============================================================ */
+.chat-overlay{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:10000;display:none;align-items:flex-end;justify-content:flex-end;padding:24px;}
+.chat-overlay.open{display:flex;}
+.chat-modal{background:#fff;border-radius:20px;width:390px;height:600px;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 24px 60px rgba(0,0,0,.25);animation:slideUp .25s ease;}
+@keyframes slideUp{from{transform:translateY(30px);opacity:0;}to{transform:translateY(0);opacity:1;}}
+
+/* Chat Header */
+.chat-header{background:linear-gradient(135deg,var(--primary),#7C3AED);padding:16px 18px;display:flex;align-items:center;gap:12px;flex-shrink:0;}
+.chat-header-avatar{width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;font-size:20px;position:relative;}
+.chat-online{width:10px;height:10px;border-radius:50%;background:#10B981;border:2px solid #fff;position:absolute;bottom:0;right:0;}
+.chat-header-info .chat-name{color:#fff;font-size:14px;font-weight:700;}
+.chat-header-info .chat-status{color:rgba(255,255,255,.75);font-size:11px;}
+.chat-header-close{margin-left:auto;color:rgba(255,255,255,.8);cursor:pointer;font-size:20px;line-height:1;}
+.chat-header-close:hover{color:#fff;}
+
+/* Chat Messages */
+.chat-messages{flex:1;overflow-y:auto;padding:16px;background:#F8F9FF;display:flex;flex-direction:column;gap:10px;}
+.msg{max-width:85%;padding:10px 14px;border-radius:14px;font-size:13px;line-height:1.55;}
+.msg.bot{background:#fff;color:#1F2937;border:1px solid var(--border);border-radius:4px 14px 14px 14px;align-self:flex-start;box-shadow:0 1px 4px rgba(0,0,0,.06);}
+.msg.user{background:var(--primary);color:#fff;border-radius:14px 4px 14px 14px;align-self:flex-end;}
+.msg-time{font-size:10px;margin-top:4px;opacity:.6;text-align:right;}
+.typing{display:flex;gap:5px;padding:10px 14px;background:#fff;border:1px solid var(--border);border-radius:4px 14px 14px 14px;align-self:flex-start;width:60px;}
+.dot{width:7px;height:7px;border-radius:50%;background:#C4B5FD;animation:blink 1.2s infinite;}
+.dot:nth-child(2){animation-delay:.2s;}
+.dot:nth-child(3){animation-delay:.4s;}
+@keyframes blink{0%,80%,100%{opacity:.2;}40%{opacity:1;}}
+
+/* Options */
+.chat-options{padding:10px 14px;background:#F8F9FF;display:flex;flex-wrap:wrap;gap:7px;}
+.opt-btn{padding:7px 14px;border-radius:22px;border:1.5px solid var(--primary);background:#fff;color:var(--primary);font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;transition:all .15s;}
+.opt-btn:hover{background:var(--primary);color:#fff;}
+
+/* Stars */
+.stars-wrap{display:flex;gap:6px;padding:8px 14px;}
+.star{font-size:28px;cursor:pointer;opacity:.4;transition:all .15s;}
+.star:hover,.star.active{opacity:1;transform:scale(1.15);}
+
+/* Input area */
+.chat-input-area{padding:12px 14px;background:#fff;border-top:1px solid var(--border);display:flex;gap:8px;flex-shrink:0;}
+.chat-input{flex:1;border:1.5px solid var(--border);border-radius:22px;padding:9px 14px;font-size:13px;outline:none;resize:none;}
+.chat-input:focus{border-color:var(--primary);}
+.chat-send{width:38px;height:38px;border-radius:50%;background:var(--primary);color:#fff;border:none;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.chat-send:hover{background:var(--primary-dark);}
+.chat-send:disabled{background:#C4B5FD;cursor:not-allowed;}
+
+/* Ticket success card */
+.ticket-success{background:linear-gradient(135deg,#D1FAE5,#ECFDF5);border:1px solid #6EE7B7;border-radius:12px;padding:14px 16px;margin:4px 0;}
+.ticket-success-id{font-size:18px;font-weight:800;color:#065F46;}
+.ticket-success-msg{font-size:12px;color:#047857;margin-top:4px;line-height:1.5;}
+.eta-row{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;}
+.eta-chip{background:rgba(5,150,105,.12);color:#047857;font-size:11px;padding:3px 10px;border-radius:20px;font-weight:600;}
+
+/* Toast */
+#s-toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%);background:var(--dark);color:#fff;padding:11px 24px;border-radius:30px;font-size:13px;font-weight:600;z-index:99999;display:none;box-shadow:0 6px 20px rgba(0,0,0,.2);}
+</style>
+</head>
+<body>
+
+<div id="s-toast"></div>
+
+<!-- ============================================================
+     PAGE 1 — STUDENT LOGIN
+============================================================ -->
+<div class="page active" id="pg-login">
+<div class="login-page">
+  <div class="login-wrap">
+
+    <!-- LEFT PANEL -->
+    <div class="login-left">
+      <div class="login-left-logo">🚀 GrowthDesk</div>
+      <div>
+        <div class="login-left-title">Your JEE & CET<br>Journey Starts Here</div>
+        <div class="login-left-sub">Log in to access your personalised dashboard, track your progress, and raise support tickets instantly.</div>
+      </div>
+      <div class="login-left-stats">
+        <div class="stat-box"><div class="stat-val">10K+</div><div class="stat-label">Students</div></div>
+        <div class="stat-box"><div class="stat-val">94%</div><div class="stat-label">Success Rate</div></div>
+        <div class="stat-box"><div class="stat-val">24/7</div><div class="stat-label">Support</div></div>
+      </div>
+    </div>
+
+    <!-- RIGHT PANEL -->
+    <div class="login-right">
+      <div class="login-right-title">Student Login</div>
+      <div class="login-right-sub">Enter your Lead ID and registered name to continue.</div>
+
+      <div class="hint-box">
+        <strong>🆕 Just registered?</strong>
+        Use the Lead ID shown after you filled the registration form on our website, along with the name you registered with.<br><br>
+        <strong>Demo accounts to try:</strong>
+        L0001 / Rahul Nair &nbsp;·&nbsp; L0002 / Arjun Nair<br>
+        L0005 / Meera Singh &nbsp;·&nbsp; L0013 / Pooja Singh
+      </div>
+
+      <div class="error-box" id="login-err">❌ Invalid Lead ID or Name. Please check and try again.</div>
+
+      <div class="form-group">
+        <label class="form-label">Lead ID (e.g. L0001)</label>
+        <input class="form-control" id="s-lid" placeholder="Enter your Lead ID" onkeydown="if(event.key==='Enter')doStudentLogin()">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Full Name (as registered)</label>
+        <input class="form-control" id="s-name" placeholder="Enter your full name" onkeydown="if(event.key==='Enter')doStudentLogin()">
+      </div>
+      <button class="btn btn-primary" style="width:100%;padding:13px;font-size:15px;margin-top:4px;" onclick="doStudentLogin()">
+        Login to My Portal →
+      </button>
+      <hr class="divider">
+      <div class="back-text">New student? <a onclick="window.location.href='growthdesk_app.html'">Register on the main site →</a></div>
+    </div>
+
+  </div>
+</div>
+</div>
+
+<!-- ============================================================
+     PAGE 2 — STUDENT PROFILE
+============================================================ -->
+<div class="page" id="pg-profile">
+
+  <!-- NAV -->
+  <nav class="profile-nav">
+    <div class="profile-nav-logo">🚀 GrowthDesk <span style="font-size:11px;opacity:.5;font-weight:400;margin-left:6px;">Student Portal</span></div>
+    <div class="profile-nav-right">
+      <div class="student-name-badge">
+        <div class="student-avatar" id="nav-avatar">–</div>
+        <span id="nav-name" style="font-size:13px;color:rgba(255,255,255,.85);">Loading...</span>
+      </div>
+      <button class="btn btn-sm" style="background:rgba(255,255,255,.12);color:rgba(255,255,255,.8);border:none;" onclick="doStudentLogout()">Sign Out</button>
+    </div>
+  </nav>
+
+  <!-- BODY -->
+  <div class="profile-body">
+
+    <!-- NEW STUDENT WELCOME BANNER (shown only for freshly registered students) -->
+    <div id="welcome-banner" style="display:none;background:linear-gradient(135deg,#D1FAE5,#ECFDF5);border:1px solid #6EE7B7;border-radius:12px;padding:14px 18px;margin-bottom:20px;display:none;align-items:center;gap:14px;">
+      <span style="font-size:28px;">🎉</span>
+      <div>
+        <div style="font-size:14px;font-weight:700;color:#065F46;">Welcome to GrowthDesk! Your registration is confirmed.</div>
+        <div style="font-size:12px;color:#047857;margin-top:2px;">Your Lead ID is <strong id="banner-id">–</strong>. Our counsellor will reach out within 24 hours. Use the Support Chat to raise any queries.</div>
+      </div>
+      <button onclick="document.getElementById('welcome-banner').style.display='none'" style="margin-left:auto;background:none;border:none;font-size:18px;cursor:pointer;color:#065F46;">✕</button>
+    </div>
+
+    <!-- HERO -->
+    <div class="profile-hero">
+      <div class="hero-avatar" id="ph-avatar">–</div>
+      <div>
+        <div class="hero-name" id="ph-name">–</div>
+        <div class="hero-id" id="ph-id">–</div>
+        <div class="hero-tags" id="ph-tags"></div>
+      </div>
+      <div class="hero-right">
+        <div class="hero-score-label">Lead Score</div>
+        <div class="hero-score-val" id="ph-score">–</div>
+        <div style="font-size:11px;opacity:.75;" id="ph-cat">–</div>
+      </div>
+    </div>
+
+    <!-- INFO CARDS -->
+    <div class="cards-grid">
+      <div class="info-card">
+        <div class="info-card-title">👤 Personal Details</div>
+        <div class="info-row"><span class="info-key">Name</span><span class="info-val" id="d-name">–</span></div>
+        <div class="info-row"><span class="info-key">Age</span><span class="info-val" id="d-age">–</span></div>
+        <div class="info-row"><span class="info-key">Class</span><span class="info-val" id="d-class">–</span></div>
+        <div class="info-row"><span class="info-key">City</span><span class="info-val" id="d-city">–</span></div>
+      </div>
+      <div class="info-card">
+        <div class="info-card-title">📚 Academic Profile</div>
+        <div class="info-row"><span class="info-key">Target Exam</span><span class="info-val" id="d-exam">–</span></div>
+        <div class="info-row"><span class="info-key">PCM %</span><span class="info-val" id="d-pcm">–</span></div>
+        <div class="info-row"><span class="info-key">Interest</span><span class="info-val" id="d-interest">–</span></div>
+        <div class="info-row"><span class="info-key">Source</span><span class="info-val" id="d-source">–</span></div>
+      </div>
+      <div class="info-card">
+        <div class="info-card-title">🎓 Enrolment Status</div>
+        <div class="info-row"><span class="info-key">Stage</span><span class="info-val" id="d-stage">–</span></div>
+        <div class="info-row"><span class="info-key">Action Taken</span><span class="info-val" id="d-action">–</span></div>
+        <div class="info-row"><span class="info-key">Status</span><span class="info-val" id="d-conversion">–</span></div>
+        <div class="info-row"><span class="info-key">Last Ticket</span><span class="info-val" id="d-ticket-status">–</span></div>
+      </div>
+    </div>
+
+    <!-- PREVIOUS TICKET -->
+    <div class="ticket-card">
+      <div class="ticket-card-title">
+        <span>🎫 My Support Tickets</span>
+        <button class="btn btn-primary btn-sm" onclick="openChat()">+ Raise New Ticket</button>
+      </div>
+      <div id="ticket-history"></div>
+    </div>
+
+    <!-- TIPS CARD -->
+    <div class="info-card" style="margin-bottom:24px;">
+      <div class="info-card-title">💡 Quick Links</div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:4px;">
+        <button class="btn btn-outline btn-sm" onclick="openChatWithType('Fees')">💰 Fee Enquiry</button>
+        <button class="btn btn-outline btn-sm" onclick="openChatWithType('Batch Timing')">🕐 Change Batch Timing</button>
+        <button class="btn btn-outline btn-sm" onclick="openChatWithType('Study Material')">📚 Study Material Issue</button>
+        <button class="btn btn-outline btn-sm" onclick="openChatWithType('Faculty Issue')">👨‍🏫 Faculty Complaint</button>
+        <button class="btn btn-outline btn-sm" onclick="openChatWithType('Other')">📋 Other Query</button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- FLOATING SUPPORT BUTTON -->
+  <button class="support-fab" onclick="openChat()">
+    <div class="fab-pulse"></div>
+    💬 Support Chat
+  </button>
+
+</div><!-- /pg-profile -->
+
+
+<!-- ============================================================
+     CHATBOT MODAL
+============================================================ -->
+<div class="chat-overlay" id="chat-overlay" onclick="handleOverlayClick(event)">
+  <div class="chat-modal" id="chat-modal">
+
+    <div class="chat-header">
+      <div class="chat-header-avatar">
+        🤖
+        <div class="chat-online"></div>
+      </div>
+      <div class="chat-header-info">
+        <div class="chat-name">GrowthDesk Support</div>
+        <div class="chat-status" id="chat-status-text">Raising a support ticket</div>
+      </div>
+      <div class="chat-header-close" onclick="closeChat()">✕</div>
+    </div>
+
+    <div class="chat-messages" id="chat-msgs"></div>
+    <div class="chat-options" id="chat-opts"></div>
+
+    <div class="chat-input-area">
+      <textarea class="chat-input" id="chat-inp" rows="1" placeholder="Type your message..." onkeydown="handleInputKey(event)"></textarea>
+      <button class="chat-send" id="chat-send-btn" onclick="sendUserMsg()">➤</button>
+    </div>
+
+  </div>
+</div>
+
+
+<script>
+// ============================================================
+//  GOOGLE SHEETS CONFIG
+// ============================================================
+let SHEETS_URL = localStorage.getItem('gd_sheets_url') || '';
+
+// ============================================================
+//  STUDENT DATABASE (from dataset, demo accounts)
+// ============================================================
+const STUDENTS = [
+  {id:'L0001',name:'Rahul Nair',    age:17,cls:12,city:'Mumbai',    exam:'CET',pcm:64, source:'Instagram',interest:'Low',   income:'5-10L',  stage:'Lead',    action:'Email Sent',         conv:'Not Converted',reason:'No response',    qtype:'Timing',   tstatus:'Resolved',   score:1},
+  {id:'L0002',name:'Arjun Nair',    age:15,cls:12,city:'Pune',      exam:'JEE',pcm:63, source:'Referral', interest:'Low',   income:'10-15L', stage:'Enrolled',action:'Called',             conv:'Converted',    reason:'Good follow-up', qtype:'Fees',     tstatus:'Resolved',   score:5},
+  {id:'L0003',name:'Rahul Das',     age:18,cls:10,city:'Mumbai',    exam:'CET',pcm:64, source:'Instagram',interest:'Low',   income:'15-20L', stage:'Enrolled',action:'Email Sent',         conv:'Converted',    reason:'High interest',  qtype:'General',  tstatus:'Pending',    score:5},
+  {id:'L0004',name:'Amit Singh',    age:15,cls:11,city:'Bangalore', exam:'CET',pcm:75, source:'Instagram',interest:'Medium',income:'5-10L',  stage:'Lead',    action:'Called',             conv:'Not Converted',reason:'No response',    qtype:'General',  tstatus:'Pending',    score:4},
+  {id:'L0005',name:'Meera Singh',   age:16,cls:11,city:'Chennai',   exam:'JEE',pcm:66, source:'Referral', interest:'Medium',income:'15-20L', stage:'Lead',    action:'No Action',          conv:'Converted',    reason:'High interest',  qtype:'General',  tstatus:'Pending',    score:1},
+  {id:'L0006',name:'Anjali Sharma', age:18,cls:11,city:'Hyderabad', exam:'CET',pcm:92, source:'Website',  interest:'Low',   income:'15-20L', stage:'Demo',    action:'Called',             conv:'Not Converted',reason:'Good follow-up', qtype:'Fees',     tstatus:'Resolved',   score:1},
+  {id:'L0007',name:'Rahul Singh',   age:16,cls:11,city:'Delhi',     exam:'CET',pcm:79, source:'Instagram',interest:'Medium',income:'5-10L',  stage:'Lead',    action:'Email Sent',         conv:'Not Converted',reason:'Low score',      qtype:'Fees',     tstatus:'Pending',    score:1},
+  {id:'L0008',name:'Rahul Kumar',   age:15,cls:11,city:'Pune',      exam:'CET',pcm:87, source:'YouTube',  interest:'Low',   income:'10-15L', stage:'Enrolled',action:'Webinar Attended',   conv:'Converted',    reason:'Good follow-up', qtype:'Timing',   tstatus:'Pending',    score:1},
+  {id:'L0009',name:'Arjun Patel',   age:17,cls:10,city:'Chennai',   exam:'CET',pcm:60, source:'Referral', interest:'Medium',income:'10-15L', stage:'Demo',    action:'No Action',          conv:'Converted',    reason:'Low score',      qtype:'Fees',     tstatus:'Pending',    score:3},
+  {id:'L0010',name:'Sneha Gupta',   age:18,cls:11,city:'Bangalore', exam:'JEE',pcm:66, source:'Referral', interest:'Medium',income:'15-20L', stage:'Lead',    action:'No Action',          conv:'Converted',    reason:'Low score',      qtype:'Complaint',tstatus:'Pending',    score:3},
+  {id:'L0011',name:'Vikram Das',    age:17,cls:11,city:'Bangalore', exam:'CET',pcm:65, source:'Instagram',interest:'High',  income:'15-20L', stage:'Enrolled',action:'Webinar Attended',   conv:'Converted',    reason:'High interest',  qtype:'Timing',   tstatus:'Resolved',   score:2},
+  {id:'L0012',name:'Kiran Sharma',  age:18,cls:12,city:'Bangalore', exam:'CET',pcm:61, source:'Website',  interest:'Medium',income:'10-15L', stage:'Enrolled',action:'Webinar Attended',   conv:'Converted',    reason:'No response',    qtype:'Timing',   tstatus:'Pending',    score:1},
+  {id:'L0013',name:'Pooja Singh',   age:17,cls:12,city:'Hyderabad', exam:'JEE',pcm:74, source:'YouTube',  interest:'High',  income:'15-20L', stage:'Enrolled',action:'Called',             conv:'Converted',    reason:'No response',    qtype:'Timing',   tstatus:'Pending',    score:2},
+  {id:'L0014',name:'Meera Das',     age:18,cls:10,city:'Hyderabad', exam:'CET',pcm:76, source:'Website',  interest:'Low',   income:'15-20L', stage:'Demo',    action:'Called',             conv:'Converted',    reason:'High interest',  qtype:'Fees',     tstatus:'Pending',    score:1},
+  {id:'L0015',name:'Vikram Singh',  age:17,cls:12,city:'Bangalore', exam:'CET',pcm:87, source:'Website',  interest:'Medium',income:'5-10L',  stage:'Enrolled',action:'Email Sent',         conv:'Converted',    reason:'No response',    qtype:'Timing',   tstatus:'Resolved',   score:2},
+  {id:'L0016',name:'Neha Gupta',    age:16,cls:12,city:'Mumbai',    exam:'JEE',pcm:86, source:'YouTube',  interest:'Low',   income:'15-20L', stage:'Enrolled',action:'Webinar Attended',   conv:'Converted',    reason:'Good follow-up', qtype:'Fees',     tstatus:'Pending',    score:5},
+  {id:'L0017',name:'Amit Iyer',     age:16,cls:10,city:'Hyderabad', exam:'JEE',pcm:62, source:'Website',  interest:'Low',   income:'15-20L', stage:'Demo',    action:'No Action',          conv:'Not Converted',reason:'Good follow-up', qtype:'Complaint',tstatus:'Resolved',   score:1},
+  {id:'L0018',name:'Anjali Sharma', age:17,cls:10,city:'Bangalore', exam:'JEE',pcm:67, source:'YouTube',  interest:'Low',   income:'10-15L', stage:'Lead',    action:'No Action',          conv:'Converted',    reason:'Low score',      qtype:'Fees',     tstatus:'Pending',    score:5},
+  {id:'L0019',name:'Neha Patel',    age:15,cls:12,city:'Bangalore', exam:'CET',pcm:92, source:'YouTube',  interest:'High',  income:'15-20L', stage:'Demo',    action:'Called',             conv:'Not Converted',reason:'No response',    qtype:'Fees',     tstatus:'Pending',    score:3},
+];
+
+// ============================================================
+//  STATE
+// ============================================================
+let currentStudent = null;
+let sessionTickets = []; // tickets raised in this session
+let chatState = 0;
+let ticketDraft = {};
+let ticketCounter = parseInt(localStorage.getItem('gd_tkt_counter') || '1');
+
+// ============================================================
+//  AUTH
+// ============================================================
+// ── Merge demo accounts with any leads registered via the landing page ──
+function getAllStudents() {
+  const registered = JSON.parse(localStorage.getItem('gd_registered_leads') || '[]');
+  const registeredMapped = registered.map(l => ({
+    id:       l.id,
+    name:     l.name,
+    age:      parseInt(l.age) || 16,
+    cls:      parseInt(l.cls) || 11,
+    city:     l.city,
+    exam:     l.exam,
+    pcm:      parseFloat(l.pcm) || 0,
+    source:   l.source,
+    interest: l.interest || 'Medium',
+    income:   l.income  || '—',
+    stage:    l.stage   || 'Lead',
+    action:   l.action  || '—',
+    conv:     'In Progress',
+    reason:   '—',
+    qtype:    'General',
+    tstatus:  'Pending',
+    score:    l.score,
+    isNew:    true   // flag so profile knows it's a fresh registration
+  }));
+  // Merge: registered leads take priority over demo accounts with same ID
+  const registeredIds = new Set(registeredMapped.map(s => s.id));
+  const demoOnly = STUDENTS.filter(s => !registeredIds.has(s.id));
+  return [...registeredMapped, ...demoOnly];
+}
+
+function doStudentLogin() {
+  const lid  = document.getElementById('s-lid').value.trim().toUpperCase();
+  const name = document.getElementById('s-name').value.trim().toLowerCase();
+  const err  = document.getElementById('login-err');
+
+  const student = getAllStudents().find(s => s.id === lid && s.name.toLowerCase() === name);
+  if (!student) { err.style.display = 'block'; return; }
+
+  err.style.display = 'none';
+  currentStudent = student;
+  loadProfile(student);
+  showPg('profile');
+}
+
+function doStudentLogout() {
+  currentStudent = null;
+  sessionTickets = [];
+  chatState = 0;
+  ticketDraft = {};
+  document.getElementById('chat-msgs').innerHTML = '';
+  document.getElementById('s-lid').value = '';
+  document.getElementById('s-name').value = '';
+  showPg('login');
+}
+
+// ============================================================
+//  PAGE NAV
+// ============================================================
+function showPg(name) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('pg-' + name).classList.add('active');
+}
+
+// ============================================================
+//  LOAD PROFILE
+// ============================================================
+function calcScore(s) {
+  let score = 0;
+  if (s.pcm > 90) score += 30; else if (s.pcm >= 75) score += 20; else score += 10;
+  if (s.interest === 'High') score += 25; else if (s.interest === 'Medium') score += 15; else score += 5;
+  if (s.source === 'Referral') score += 20; else if (s.source === 'Website') score += 15; else score += 10;
+  if (s.income === '15-20L' || s.income === 'Above 20L') score += 15; else if (s.income === '10-15L') score += 10; else score += 5;
+  if (s.exam === 'JEE') score += 10; else score += 5;
+  return score;
+}
+
+function loadProfile(s) {
+  const score = calcScore(s);
+  const cat = score >= 80 ? '🔥 Hot' : score >= 60 ? '🌡️ Warm' : '❄️ Cold';
+  const initials = s.name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
+
+  // Show welcome banner for freshly registered students
+  const banner = document.getElementById('welcome-banner');
+  if (s.isNew) {
+    document.getElementById('banner-id').textContent = s.id;
+    banner.style.display = 'flex';
+  } else {
+    banner.style.display = 'none';
+  }
+
+  // Nav
+  document.getElementById('nav-avatar').textContent = initials;
+  document.getElementById('nav-name').textContent = s.name;
+
+  // Hero
+  document.getElementById('ph-avatar').textContent = initials;
+  document.getElementById('ph-name').textContent = s.name;
+  document.getElementById('ph-id').textContent = `Lead ID: ${s.id}  ·  Class ${s.cls}  ·  ${s.city}`;
+  document.getElementById('ph-score').textContent = score;
+  document.getElementById('ph-cat').textContent = cat;
+  document.getElementById('ph-tags').innerHTML = [
+    `🎯 ${s.exam}`,
+    `📊 PCM: ${s.pcm}%`,
+    `🏙️ ${s.city}`,
+    `${s.stage === 'Enrolled' ? '✅' : s.stage === 'Demo' ? '📋' : '🎯'} ${s.stage}`
+  ].map(t => `<span class="hero-tag">${t}</span>`).join('');
+
+  // Info cards
+  document.getElementById('d-name').textContent = s.name;
+  document.getElementById('d-age').textContent = s.age + ' years';
+  document.getElementById('d-class').textContent = 'Class ' + s.cls;
+  document.getElementById('d-city').textContent = s.city;
+  document.getElementById('d-exam').innerHTML = `<span class="badge badge-blue">${s.exam}</span>`;
+  document.getElementById('d-pcm').textContent = s.pcm + '%';
+  document.getElementById('d-interest').textContent = s.interest;
+  document.getElementById('d-source').textContent = s.source;
+  document.getElementById('d-stage').innerHTML = stageBadge(s.stage);
+  document.getElementById('d-action').textContent = s.action;
+  document.getElementById('d-conversion').innerHTML = s.conv === 'Converted' ? '<span class="badge badge-green">✓ Converted</span>' : '<span class="badge badge-yellow">In Progress</span>';
+  document.getElementById('d-ticket-status').innerHTML = statusBadge(s.tstatus);
+
+  // Ticket history (previous ticket from dataset)
+  renderTicketHistory(s);
+}
+
+function stageBadge(s) {
+  const map = {Lead:'badge-blue', Demo:'badge-yellow', Enrolled:'badge-green'};
+  return `<span class="badge ${map[s]||'badge-purple'}">${s}</span>`;
+}
+function statusBadge(s) {
+  if (s==='Resolved') return `<span class="badge badge-green">✓ Resolved</span>`;
+  if (s==='Pending')  return `<span class="badge badge-yellow">⏳ Pending</span>`;
+  return `<span class="badge badge-red">⚠ ${s}</span>`;
+}
+
+function renderTicketHistory(s) {
+  const el = document.getElementById('ticket-history');
+  const icons = {Fees:'💰',Timing:'🕐',General:'📋',Complaint:'⚠️',Other:'📌','Batch Timing':'🕐','Study Material':'📚','Faculty Issue':'👨‍🏫'};
+  const colors = {Fees:'#DBEAFE',Timing:'#EDE9FE',General:'#F3F4F6',Complaint:'#FEE2E2',Other:'#FEF3C7'};
+
+  let html = '';
+
+  // Previous ticket from dataset
+  const prevId = 'TKT-' + s.id + '-001';
+  html += `<div class="ticket-item">
+    <div class="tkt-icon" style="background:${colors[s.qtype]||'#F3F4F6'}">${icons[s.qtype]||'📋'}</div>
+    <div class="tkt-body">
+      <div class="tkt-id">${prevId}</div>
+      <div class="tkt-msg">${s.qtype} query raised during registration</div>
+      <div class="tkt-meta">${statusBadge(s.tstatus)}<span class="tkt-time">Earlier · Rating: ${'⭐'.repeat(s.score)}</span></div>
+    </div>
+  </div>`;
+
+  // Session tickets
+  sessionTickets.filter(t => t.leadId === s.id).forEach(t => {
+    html += `<div class="ticket-item">
+      <div class="tkt-icon" style="background:${colors[t.queryType]||'#EDE9FE'}">${icons[t.queryType]||'📋'}</div>
+      <div class="tkt-body">
+        <div class="tkt-id">${t.ticketId}</div>
+        <div class="tkt-msg">${t.queryMessage.slice(0,80)}${t.queryMessage.length>80?'…':''}</div>
+        <div class="tkt-meta">${statusBadge(t.status)}<span class="tkt-time">${t.submittedAt} · Priority: ${t.priority}</span></div>
+      </div>
+    </div>`;
+  });
+
+  el.innerHTML = html || '<div class="empty-state"><div class="empty-icon">🎫</div>No tickets yet. Use the Support Chat to raise one!</div>';
+}
+
+// ============================================================
+//  CHATBOT
+// ============================================================
+const QUERY_TYPES = ['💰 Fees','🕐 Batch Timing','📚 Study Material','👨‍🏫 Faculty Issue','📋 Other'];
+const PRIORITIES  = ['🟢 Low','🟡 Medium','🔴 High','🚨 Urgent'];
+
+const ETA = {
+  'Fees':'2–4 working hours',
+  'Batch Timing':'4–8 working hours',
+  'Study Material':'1–2 working days',
+  'Faculty Issue':'24 working hours',
+  'Other':'1–2 working days'
+};
+
+function openChat() {
+  ticketDraft = {};
+  chatState = 0;
+  document.getElementById('chat-msgs').innerHTML = '';
+  document.getElementById('chat-opts').innerHTML = '';
+  document.getElementById('chat-inp').value = '';
+  document.getElementById('chat-overlay').classList.add('open');
+  document.getElementById('chat-send-btn').disabled = false;
+  document.getElementById('chat-status-text').textContent = 'Raise a support ticket';
+  setTimeout(() => startChat(), 200);
+}
+
+function openChatWithType(type) {
+  openChat();
+  setTimeout(() => {
+    ticketDraft.queryType = type;
+    chatState = 2;
+    clearOpts();
+    addBotMsg(`Got it — you need help with: <strong>${type}</strong>.\n\nPlease describe your issue in as much detail as possible so our team can help you quickly.`);
+  }, 1800);
+}
+
+function closeChat() {
+  document.getElementById('chat-overlay').classList.remove('open');
+  // refresh profile tickets
+  if (currentStudent) renderTicketHistory(currentStudent);
+}
+
+function handleOverlayClick(e) {
+  if (e.target === document.getElementById('chat-overlay')) closeChat();
+}
+
+function startChat() {
+  const s = currentStudent;
+  addBotMsg(`Hi ${s.name.split(' ')[0]}! 👋 I'm here to help you raise a support ticket.\n\nYour ticket will be sent to our support team and you'll receive a resolution based on the priority you select.\n\nWhat do you need help with today?`);
+  setTimeout(() => showOptions(QUERY_TYPES, handleQueryType), 800);
+}
+
+function handleQueryType(val) {
+  const clean = val.replace(/^[^\s]+\s/, '');
+  ticketDraft.queryType = clean;
+  clearOpts();
+  addUserMsg(val);
+  chatState = 2;
+  addBotMsg(`Got it — <strong>${clean}</strong>.\n\nPlease describe your issue in as much detail as possible. The more you share, the faster we can help!`);
+  enableInput();
+}
+
+function handleDescription(msg) {
+  ticketDraft.queryMessage = msg;
+  chatState = 3;
+  addBotMsg(`Thank you for the details. 📝\n\nHow urgent is this for you?`);
+  setTimeout(() => showOptions(PRIORITIES, handlePriority), 500);
+  disableInput();
+}
+
+function handlePriority(val) {
+  const clean = val.replace(/^[^\s]+\s/, '');
+  ticketDraft.priority = clean;
+  clearOpts();
+  addUserMsg(val);
+  chatState = 4;
+
+  // Show confirmation
+  addBotMsg(`Here's a summary of your ticket:\n\n📌 Type: ${ticketDraft.queryType}\n📝 Issue: ${ticketDraft.queryMessage.slice(0,80)}${ticketDraft.queryMessage.length>80?'…':''}\n⚡ Priority: ${clean}\n\nShall I submit this ticket?`);
+  setTimeout(() => showOptions(['✅ Yes, Submit','✏️ Edit Message'], handleConfirm), 500);
+}
+
+function handleConfirm(val) {
+  clearOpts();
+  addUserMsg(val);
+  if (val.includes('Edit')) {
+    chatState = 2;
+    addBotMsg('No problem! Please re-enter your message:');
+    enableInput();
+    return;
+  }
+  chatState = 5;
+  submitTicket();
+}
+
+function submitTicket() {
+  const s = currentStudent;
+  const tktId = 'TKT-' + s.id + '-' + String(ticketCounter++).padStart(3,'0');
+  localStorage.setItem('gd_tkt_counter', ticketCounter);
+  const eta = ETA[ticketDraft.queryType] || '1–2 working days';
+  const now = new Date().toLocaleString('en-IN');
+
+  const ticket = {
+    ticketId: tktId,
+    leadId: s.id,
+    name: s.name,
+    age: s.age,
+    cls: s.cls,
+    city: s.city,
+    exam: s.exam,
+    queryType: ticketDraft.queryType,
+    queryMessage: ticketDraft.queryMessage,
+    priority: ticketDraft.priority,
+    status: 'Open',
+    satisfactionScore: '',
+    submittedAt: now
+  };
+
+  sessionTickets.push(ticket);
+
+  // Save to Google Sheets
+  if (SHEETS_URL) {
+    fetch(SHEETS_URL, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ type: 'ticket', ...ticket })
+    }).catch(() => {});
+  }
+
+  // Show success card
+  const msgs = document.getElementById('chat-msgs');
+  const div = document.createElement('div');
+  div.className = 'msg bot';
+  div.innerHTML = `
+    <div>Your ticket has been raised successfully! 🎉</div>
+    <div class="ticket-success">
+      <div class="ticket-success-id">${tktId}</div>
+      <div class="ticket-success-msg">Our support team has been notified. You will receive a response within the estimated time.</div>
+      <div class="eta-row">
+        <span class="eta-chip">⏱ ETA: ${eta}</span>
+        <span class="eta-chip">⚡ ${ticketDraft.priority}</span>
+        <span class="eta-chip">📌 ${ticketDraft.queryType}</span>
+      </div>
+    </div>`;
+  msgs.appendChild(div);
+  msgs.scrollTop = msgs.scrollHeight;
+
+  // Ask for satisfaction rating
+  setTimeout(() => {
+    chatState = 6;
+    addBotMsg('Before you go — how satisfied are you with GrowthDesk\'s service so far? Your feedback helps us improve! ⭐');
+    setTimeout(() => showStarRating(), 500);
+  }, 1000);
+}
+
+function showStarRating() {
+  const opts = document.getElementById('chat-opts');
+  opts.innerHTML = '';
+  const wrap = document.createElement('div');
+  wrap.className = 'stars-wrap';
+  for (let i = 1; i <= 5; i++) {
+    const star = document.createElement('span');
+    star.className = 'star';
+    star.textContent = '⭐';
+    star.dataset.val = i;
+    star.addEventListener('mouseover', () => {
+      wrap.querySelectorAll('.star').forEach((s,j) => s.classList.toggle('active', j < i));
+    });
+    star.addEventListener('mouseout', () => {
+      wrap.querySelectorAll('.star').forEach(s => s.classList.remove('active'));
+    });
+    star.addEventListener('click', () => handleRating(i));
+    wrap.appendChild(star);
+  }
+  opts.appendChild(wrap);
+}
+
+function handleRating(val) {
+  clearOpts();
+  const starStr = '⭐'.repeat(val);
+  addUserMsg(`Rating: ${starStr} (${val}/5)`);
+
+  // Update session ticket
+  const last = sessionTickets[sessionTickets.length - 1];
+  if (last) last.satisfactionScore = val;
+
+  const msgs = ['Thanks so much! 😊 We\'ll keep working hard to improve.','Thank you! Your feedback means a lot to us. 💙','We appreciate it! We\'ll pass this on to the team. 🙏','Glad to hear that! We\'re always here for you. 😊','Excellent! We\'re thrilled to have you with us! 🎉'];
+  addBotMsg(msgs[val-1] + '\n\nYour ticket has been saved. You can view it in your profile. Is there anything else I can help with?');
+  setTimeout(() => showOptions(['✅ That\'s all, close chat','🎫 Raise another ticket'], handleEnd), 600);
+}
+
+function handleEnd(val) {
+  clearOpts();
+  addUserMsg(val);
+  if (val.includes('another')) {
+    setTimeout(() => { openChat(); }, 400);
+  } else {
+    addBotMsg('Great! Have a productive study session. 📚 All the best for your preparation! 🚀');
+    setTimeout(() => {
+      closeChat();
+    }, 2000);
+  }
+}
+
+// ============================================================
+//  CHAT HELPERS
+// ============================================================
+function addBotMsg(html) {
+  const msgs = document.getElementById('chat-msgs');
+  // typing indicator
+  const typing = document.createElement('div');
+  typing.className = 'typing';
+  typing.innerHTML = '<div class="dot"></div><div class="dot"></div><div class="dot"></div>';
+  msgs.appendChild(typing);
+  msgs.scrollTop = msgs.scrollHeight;
+  setTimeout(() => {
+    msgs.removeChild(typing);
+    const div = document.createElement('div');
+    div.className = 'msg bot';
+    div.style.whiteSpace = 'pre-line';
+    div.innerHTML = html;
+    msgs.appendChild(div);
+    msgs.scrollTop = msgs.scrollHeight;
+  }, 700);
+}
+
+function addUserMsg(text) {
+  const msgs = document.getElementById('chat-msgs');
+  const div = document.createElement('div');
+  div.className = 'msg user';
+  div.textContent = text;
+  msgs.appendChild(div);
+  msgs.scrollTop = msgs.scrollHeight;
+}
+
+function showOptions(opts, handler) {
+  const el = document.getElementById('chat-opts');
+  el.innerHTML = '';
+  opts.forEach(o => {
+    const btn = document.createElement('button');
+    btn.className = 'opt-btn';
+    btn.textContent = o;
+    btn.onclick = () => { handler(o); };
+    el.appendChild(btn);
+  });
+}
+
+function clearOpts() { document.getElementById('chat-opts').innerHTML = ''; }
+function enableInput()  { document.getElementById('chat-inp').disabled = false; document.getElementById('chat-send-btn').disabled = false; document.getElementById('chat-inp').focus(); }
+function disableInput() { document.getElementById('chat-inp').disabled = true;  document.getElementById('chat-send-btn').disabled = true; }
+
+function sendUserMsg() {
+  const inp = document.getElementById('chat-inp');
+  const text = inp.value.trim();
+  if (!text) return;
+  inp.value = '';
+  addUserMsg(text);
+  if (chatState === 2) handleDescription(text);
+  else addBotMsg('Thanks! Please use the buttons above to continue, or click the X to close this chat.');
+}
+
+function handleInputKey(e) {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendUserMsg(); }
+}
+
+// Init: disable input until a student logs in.
+if (document.readyState !== 'loading') { /* DOM already ready */ }
+</script>
+</body>
+</html>

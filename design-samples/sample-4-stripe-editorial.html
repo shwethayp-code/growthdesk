@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GrowthDesk · Sample 4 — Stripe-Style Editorial</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,700;1,6..72,500&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#FFFFFF;
+  --bg-soft:#FAFAFA;
+  --bg-tinted:#F4F2EE;
+  --ink:#0A2540;
+  --ink-2:#425466;
+  --slate:#697384;
+  --slate-2:#8B95A2;
+  --border:#E6E8EB;
+  --hair:#F0F2F5;
+  --primary:#635BFF;
+  --primary-soft:#F4F1FE;
+  --primary-dark:#403CCC;
+  --green:#00A656;
+  --amber:#B8741E;
+  --rose:#A11D3D;
+  --gradient-1:linear-gradient(135deg,#A78BFA 0%,#7C7AFF 50%,#5DD3F4 100%);
+}
+html,body{
+  background:var(--bg);
+  color:var(--ink);
+  font-family:'Inter',sans-serif;
+  font-size:15px;line-height:1.6;
+  -webkit-font-smoothing:antialiased;
+  letter-spacing:-0.005em;
+}
+.serif{font-family:'Newsreader',serif;font-weight:500;letter-spacing:-0.015em}
+
+/* NAV */
+.nav{
+  height:64px;display:flex;align-items:center;justify-content:space-between;
+  padding:0 56px;background:rgba(255,255,255,0.92);
+  backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+  border-bottom:1px solid var(--hair);
+  position:sticky;top:0;z-index:100;
+}
+.logo{display:flex;align-items:center;gap:9px;font-weight:700;font-size:18px;letter-spacing:-0.02em;color:var(--ink)}
+.logo-mark{
+  width:28px;height:28px;border-radius:7px;background:var(--gradient-1);
+  display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:13px;
+}
+.nav-links{display:flex;gap:2px}
+.nav-links a{color:var(--ink-2);text-decoration:none;font-size:14px;padding:7px 14px;border-radius:6px;font-weight:500}
+.nav-links a:hover{color:var(--ink)}
+.nav-right{display:flex;gap:10px;align-items:center}
+.nav-right .signin{color:var(--ink-2);font-size:14px;font-weight:500;padding:7px 12px;text-decoration:none}
+.nav-cta{
+  background:var(--ink);color:#fff;
+  padding:8px 16px;border-radius:6px;font-weight:600;font-size:13px;
+  text-decoration:none;display:inline-flex;align-items:center;gap:6px;
+}
+.nav-cta:hover{background:#1A3D6E}
+
+/* HERO */
+.hero{padding:96px 56px 60px;max-width:1280px;margin:0 auto;position:relative}
+.hero::before{
+  content:'';position:absolute;top:0;right:0;width:520px;height:520px;
+  background:radial-gradient(circle, rgba(99,91,255,0.08), transparent 60%);
+  pointer-events:none;
+}
+.hero-grid{display:grid;grid-template-columns:1.05fr 0.95fr;gap:80px;align-items:center;position:relative}
+.hero-eyebrow{
+  display:inline-flex;align-items:center;gap:10px;
+  font-size:13px;font-weight:500;color:var(--ink-2);margin-bottom:32px;
+}
+.hero-eyebrow .dot{width:6px;height:6px;border-radius:50%;background:var(--green)}
+.hero-eyebrow .new{
+  background:var(--primary-soft);color:var(--primary);
+  font-size:11px;font-weight:600;padding:3px 10px;border-radius:100px;letter-spacing:0.02em;
+}
+.hero h1{
+  font-family:'Newsreader',serif;font-weight:500;
+  font-size:72px;line-height:1.02;letter-spacing:-2px;color:var(--ink);
+  margin-bottom:28px;
+}
+.hero h1 .italic{font-style:italic;color:var(--primary)}
+.hero p.lede{
+  font-size:19px;color:var(--ink-2);max-width:540px;line-height:1.55;margin-bottom:36px;font-weight:400;
+}
+.cta-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.btn{
+  padding:11px 20px;border-radius:8px;font-weight:600;font-size:14px;cursor:pointer;
+  border:none;transition:all .15s;text-decoration:none;display:inline-flex;align-items:center;gap:6px;
+  letter-spacing:-0.01em;
+}
+.btn-primary{background:var(--ink);color:#fff}
+.btn-primary:hover{background:#1A3D6E;transform:translateY(-1px)}
+.btn-link{background:transparent;color:var(--primary);padding:11px 14px}
+.btn-link:hover{color:var(--primary-dark)}
+.btn .arrow{display:inline-block;transition:transform .15s}
+.btn:hover .arrow{transform:translateX(2px)}
+
+/* CODE / DASHBOARD MOCK */
+.dashboard-mock{
+  background:#fff;border:1px solid var(--border);border-radius:14px;
+  box-shadow:0 30px 60px -20px rgba(50,50,93,0.10), 0 12px 24px -16px rgba(0,0,0,0.05);
+  overflow:hidden;
+}
+.dashboard-bar{
+  height:38px;background:var(--bg-soft);border-bottom:1px solid var(--hair);
+  display:flex;align-items:center;padding:0 14px;gap:6px;
+}
+.dashboard-bar .dot{width:10px;height:10px;border-radius:50%}
+.dashboard-bar .dot.r{background:#FF6058}
+.dashboard-bar .dot.y{background:#FFBD2E}
+.dashboard-bar .dot.g{background:#28C941}
+.dashboard-bar .url{
+  margin-left:18px;font-size:12px;color:var(--slate);font-family:ui-monospace,monospace;
+  background:#fff;border:1px solid var(--hair);border-radius:6px;padding:3px 12px;flex:1;max-width:280px;
+}
+.dashboard-body{padding:24px 28px}
+.dashboard-title{
+  display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:20px;
+}
+.dashboard-title h4{font-size:13px;font-weight:600;color:var(--slate);text-transform:uppercase;letter-spacing:0.06em}
+.dashboard-title .filter{font-size:12px;color:var(--slate);background:var(--bg-soft);padding:4px 10px;border-radius:6px;border:1px solid var(--border)}
+.kpi-row{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:24px}
+.kpi{padding:14px;border:1px solid var(--hair);border-radius:10px}
+.kpi-label{font-size:11px;color:var(--slate);font-weight:600;letter-spacing:0.04em;text-transform:uppercase;margin-bottom:6px}
+.kpi-value{font-size:26px;font-weight:600;letter-spacing:-0.04em;color:var(--ink);font-family:'Newsreader',serif}
+.kpi-trend{display:inline-flex;align-items:center;gap:3px;margin-top:4px;font-size:11px;color:var(--green);font-weight:500}
+.chart{
+  height:120px;border:1px solid var(--hair);border-radius:10px;padding:14px;
+  background:linear-gradient(180deg, transparent 0%, var(--primary-soft) 100%);
+  position:relative;overflow:hidden;
+}
+.chart svg{width:100%;height:100%}
+.chart-label{position:absolute;top:12px;left:14px;font-size:11px;color:var(--slate);font-weight:600;letter-spacing:0.04em;text-transform:uppercase}
+
+/* TRUSTED BY */
+.trust{padding:64px 56px;max-width:1280px;margin:0 auto;border-top:1px solid var(--hair)}
+.trust-label{font-size:13px;color:var(--slate);text-align:center;margin-bottom:28px;font-weight:500}
+.trust-row{display:flex;justify-content:center;gap:54px;flex-wrap:wrap;align-items:center}
+.trust-item{
+  font-family:'Newsreader',serif;font-style:italic;font-size:22px;font-weight:500;
+  color:var(--slate-2);letter-spacing:-0.01em;
+}
+
+/* DEEP CONTENT BAND */
+.deep{padding:96px 56px;max-width:1280px;margin:0 auto}
+.deep-grid{display:grid;grid-template-columns:0.45fr 0.55fr;gap:64px;align-items:start}
+.deep-eyebrow{
+  font-size:12px;font-weight:600;color:var(--primary);letter-spacing:0.10em;text-transform:uppercase;margin-bottom:18px;
+}
+.deep h2{
+  font-family:'Newsreader',serif;font-weight:500;
+  font-size:48px;line-height:1.1;letter-spacing:-1.5px;margin-bottom:24px;color:var(--ink);
+}
+.deep h2 .italic{font-style:italic;color:var(--primary)}
+.deep p{font-size:16px;color:var(--ink-2);line-height:1.65;margin-bottom:24px}
+.deep ul{list-style:none;padding:0;display:grid;gap:14px}
+.deep li{
+  display:grid;grid-template-columns:24px 1fr;gap:14px;align-items:start;
+  padding:18px 0;border-top:1px solid var(--hair);
+}
+.deep li:first-child{border-top:none;padding-top:0}
+.deep li .icon{
+  width:22px;height:22px;border-radius:50%;background:var(--primary-soft);
+  display:flex;align-items:center;justify-content:center;
+  margin-top:1px;
+}
+.deep li .icon svg{width:13px;height:13px;color:var(--primary)}
+.deep li .body strong{display:block;font-size:15px;font-weight:600;color:var(--ink);margin-bottom:3px;letter-spacing:-0.01em}
+.deep li .body p{font-size:14px;color:var(--ink-2);margin:0;line-height:1.55}
+
+/* PULL QUOTE */
+.pullquote{
+  background:var(--bg-tinted);border-radius:18px;
+  padding:48px;
+}
+.pullquote-mark{
+  font-family:'Newsreader',serif;font-size:80px;line-height:0.5;color:var(--primary);
+  display:block;margin-bottom:24px;
+}
+.pullquote q{
+  display:block;quotes:none;
+  font-family:'Newsreader',serif;font-size:24px;font-weight:500;
+  letter-spacing:-0.5px;line-height:1.4;color:var(--ink);font-style:italic;margin-bottom:28px;
+}
+.pullquote q::before,.pullquote q::after{content:''}
+.pullquote-attribution{display:flex;align-items:center;gap:14px}
+.pullquote-avatar{
+  width:42px;height:42px;border-radius:50%;
+  background:var(--gradient-1);display:flex;align-items:center;justify-content:center;
+  color:#fff;font-weight:700;font-size:15px;letter-spacing:-0.01em;
+}
+.pullquote-meta{font-size:13px}
+.pullquote-meta .name{font-weight:600;color:var(--ink)}
+.pullquote-meta .role{color:var(--slate);margin-top:2px}
+
+@media(max-width:900px){
+  .hero-grid,.deep-grid{grid-template-columns:1fr;gap:48px}
+  .hero h1{font-size:42px;letter-spacing:-1.2px}
+  .deep h2{font-size:32px;letter-spacing:-0.8px}
+  .nav-links{display:none}
+  .hero,.deep,.trust{padding-left:24px;padding-right:24px}
+  .nav{padding:0 24px}
+}
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="logo"><span class="logo-mark">G</span>GrowthDesk</div>
+  <div class="nav-links">
+    <a href="#">Product</a>
+    <a href="#">Compliance</a>
+    <a href="#">Pricing</a>
+    <a href="#">Customers</a>
+    <a href="#">Docs</a>
+  </div>
+  <div class="nav-right">
+    <a href="#" class="signin">Sign in</a>
+    <a href="#" class="nav-cta">Open dashboard</a>
+  </div>
+</nav>
+
+<section class="hero">
+  <div class="hero-grid">
+    <div>
+      <div class="hero-eyebrow">
+        <span class="dot"></span>
+        <span>Now live</span>
+        <span class="new">DPDP compliance · v2</span>
+      </div>
+      <h1>Lead management,<br>built <span class="italic serif">for the way</span><br>India learns.</h1>
+      <p class="lede">A complete CRM for JEE and CET coaching institutes. Lead scoring, compliance, payments, and the student portal — in one HTML file. No backend. No subscriptions. No tradeoffs.</p>
+      <div class="cta-row">
+        <a href="#" class="btn btn-primary">Start now <span class="arrow">→</span></a>
+        <a href="#" class="btn btn-link">Contact sales <span class="arrow">→</span></a>
+      </div>
+    </div>
+
+    <div class="dashboard-mock">
+      <div class="dashboard-bar">
+        <div class="dot r"></div><div class="dot y"></div><div class="dot g"></div>
+        <div class="url">growthdesk.in/dashboard</div>
+      </div>
+      <div class="dashboard-body">
+        <div class="dashboard-title">
+          <h4>Pipeline overview</h4>
+          <span class="filter">Last 30 days · Pune branch</span>
+        </div>
+        <div class="kpi-row">
+          <div class="kpi">
+            <div class="kpi-label">Hot leads</div>
+            <div class="kpi-value">87</div>
+            <div class="kpi-trend">↑ 23% w/w</div>
+          </div>
+          <div class="kpi">
+            <div class="kpi-label">Enrolments</div>
+            <div class="kpi-value">12</div>
+            <div class="kpi-trend">↑ 4 vs prev</div>
+          </div>
+          <div class="kpi">
+            <div class="kpi-label">Compliance</div>
+            <div class="kpi-value">96%</div>
+            <div class="kpi-trend">↑ 2 pp</div>
+          </div>
+        </div>
+        <div class="chart">
+          <span class="chart-label">Lead volume · weekly</span>
+          <svg viewBox="0 0 400 100" preserveAspectRatio="none">
+            <path d="M0,80 L40,72 L80,68 L120,55 L160,60 L200,40 L240,46 L280,28 L320,32 L360,16 L400,22"
+                  fill="none" stroke="#635BFF" stroke-width="2" stroke-linejoin="round"/>
+            <path d="M0,80 L40,72 L80,68 L120,55 L160,60 L200,40 L240,46 L280,28 L320,32 L360,16 L400,22 L400,100 L0,100 Z"
+                  fill="rgba(99,91,255,0.10)"/>
+            <circle cx="360" cy="16" r="4" fill="#635BFF"/>
+            <circle cx="360" cy="16" r="8" fill="rgba(99,91,255,0.20)"/>
+          </svg>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="trust">
+  <div class="trust-label">Built to replace these line items in your monthly subscription bill</div>
+  <div class="trust-row">
+    <span class="trust-item">LeadSquared</span>
+    <span class="trust-item">Meritto</span>
+    <span class="trust-item">NoPaperForms</span>
+    <span class="trust-item">HubSpot Starter</span>
+    <span class="trust-item">Mailchimp</span>
+  </div>
+</section>
+
+<section class="deep">
+  <div class="deep-grid">
+    <div>
+      <div class="deep-eyebrow">Why institutes switch</div>
+      <h2>The CRM that <span class="italic serif">actually</span> understands JEE prep.</h2>
+      <p>LeadSquared was built for B2B sales pipelines. Meritto for university admissions. Neither knows what a "PCM percentage" is, or why a Hot lead in March needs a different message than one in November.</p>
+      <p>GrowthDesk was built by a coaching institute, for coaching institutes. Every field, every score weight, every email template comes from a real lead pipeline running real students through real JEE seasons.</p>
+      <ul>
+        <li>
+          <span class="icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg></span>
+          <div class="body">
+            <strong>Score weights you can tune</strong>
+            <p>The default weights (PCM 30, Interest 25, Source 20, Income 15, Exam 10) are starting points. Edit them in the Apps Script in 90 seconds.</p>
+          </div>
+        </li>
+        <li>
+          <span class="icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg></span>
+          <div class="body">
+            <strong>DPDP-compliant by default</strong>
+            <p>Every lead, every campaign, every market — auto-checked against India's Digital Personal Data Protection Act 2023. With audit log.</p>
+          </div>
+        </li>
+        <li>
+          <span class="icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg></span>
+          <div class="body">
+            <strong>Owned, not rented</strong>
+            <p>One HTML file. Your data lives in your browser or your Google Sheet. No vendor can hold it hostage.</p>
+          </div>
+        </li>
+      </ul>
+    </div>
+
+    <div class="pullquote">
+      <span class="pullquote-mark">"</span>
+      <q>We were paying ₹6,500 a month for LeadSquared and still doing the lead scoring in Excel. GrowthDesk replaced both, plus the chatbot we were building. The institute owner could read the code.</q>
+      <div class="pullquote-attribution">
+        <div class="pullquote-avatar">RM</div>
+        <div class="pullquote-meta">
+          <div class="name">Operations head, JEE coaching institute</div>
+          <div class="role">Western India · 9-counsellor team</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+</body>
+</html>

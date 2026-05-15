@@ -1,0 +1,224 @@
+{
+  "name": "GrowthDesk - Complaint Escalation Workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "growthdesk-complaint",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "node-webhook-complaint",
+      "name": "Webhook - Receive Complaint",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [240, 340],
+      "webhookId": "growthdesk-complaint-001",
+      "notes": "Chatbot POSTs here when student raises a complaint."
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ status: 'complaint_received', ticket_id: $json.ticket_id, message: 'Complaint escalation triggered' }) }}",
+        "options": {}
+      },
+      "id": "node-respond-complaint",
+      "name": "Respond to Chatbot",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [460, 220]
+    },
+    {
+      "parameters": {
+        "jsCode": "const body = $input.first().json.body || $input.first().json;\nconst now = new Date();\nconst ticketId = body.ticket_id || ('CMP-' + Date.now().toString().slice(-6));\nconst severity = body.pcm_percentage > 85 ? 'High' : body.pcm_percentage > 70 ? 'Medium' : 'Low';\nreturn [{\n  json: {\n    ticket_id: ticketId,\n    student_name: body.student_name || 'Unknown Student',\n    student_email: body.student_email || '',\n    city: body.city || 'Unknown',\n    target_exam: body.target_exam || 'JEE/CET',\n    complaint_message: body.message || '',\n    complaint_category: body.complaint_category || 'General Complaint',\n    pcm_percentage: body.pcm_percentage || 0,\n    lead_score: body.lead_score || 0,\n    severity: severity,\n    stage: body.stage || 'Lead',\n    source: body.source || 'Chatbot',\n    raised_at: now.toISOString(),\n    raised_at_readable: now.toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' }),\n    escalation_due: new Date(now.getTime() + 2 * 60 * 60 * 1000).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' }),\n    resolution_due: new Date(now.getTime() + 24 * 60 * 60 * 1000).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })\n  }\n}];"
+      },
+      "id": "node-prepare-complaint",
+      "name": "Prepare Complaint Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [460, 460],
+      "notes": "Normalises complaint payload and computes severity based on student PCM score."
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {},
+          "conditions": [
+            {
+              "id": "cond-high",
+              "leftValue": "={{ $json.severity }}",
+              "rightValue": "High",
+              "operator": { "type": "string", "operation": "equals" }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "id": "node-if-severity",
+      "name": "High Value Student?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [700, 460],
+      "notes": "High severity = PCM > 85%. These students are priority leads — complaints must be resolved fast."
+    },
+    {
+      "parameters": {
+        "sendTo": "admin@yourdomain.com",
+        "subject": "=🚨 URGENT COMPLAINT | High-Value Student | {{ $json.ticket_id }} | {{ $json.student_name }} - {{ $json.city }}",
+        "message": "=<h2 style='color:#c0392b'>URGENT — High-Value Student Complaint</h2>\n<p style='background:#fdedec;padding:10px;border-left:4px solid #e74c3c'><b>This student has PCM > 85% and is a high-potential lead. Losing them impacts both support score and revenue. Respond within 2 hours.</b></p>\n<table border='1' cellpadding='8' cellspacing='0' style='border-collapse:collapse;font-family:Arial;width:100%'>\n<tr><td><b>Ticket ID</b></td><td>{{ $json.ticket_id }}</td></tr>\n<tr><td><b>Student</b></td><td>{{ $json.student_name }}</td></tr>\n<tr><td><b>City</b></td><td>{{ $json.city }}</td></tr>\n<tr><td><b>Target Exam</b></td><td>{{ $json.target_exam }}</td></tr>\n<tr><td><b>PCM %</b></td><td>{{ $json.pcm_percentage }}%</td></tr>\n<tr><td><b>Severity</b></td><td style='color:#c0392b'><b>{{ $json.severity }}</b></td></tr>\n<tr><td><b>Complaint</b></td><td>{{ $json.complaint_message }}</td></tr>\n<tr><td><b>Category</b></td><td>{{ $json.complaint_category }}</td></tr>\n<tr><td><b>Raised At</b></td><td>{{ $json.raised_at_readable }}</td></tr>\n<tr><td><b>Escalation Due</b></td><td>{{ $json.escalation_due }}</td></tr>\n<tr><td><b>Resolution Due</b></td><td>{{ $json.resolution_due }}</td></tr>\n</table>\n<br>\n<p><b>Action Required (Senior Support):</b></p>\n<ul>\n<li>Call or WhatsApp student within 2 hours</li>\n<li>Offer a personal counselling session</li>\n<li>Log resolution in GrowthDesk dashboard</li>\n<li>Notify Lead Scoring Team to re-score this lead after resolution</li>\n</ul>",
+        "options": {
+          "appendAttribution": false,
+          "replyTo": "admin@yourdomain.com"
+        }
+      },
+      "id": "node-email-urgent",
+      "name": "Email - Urgent Complaint (High Value)",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [940, 320],
+      "credentials": { "gmailOAuth2": { "id": "gmail-cred-1", "name": "Gmail GrowthDesk" } }
+    },
+    {
+      "parameters": {
+        "sendTo": "admin@yourdomain.com",
+        "subject": "=⚠️ Complaint Raised | {{ $json.ticket_id }} | {{ $json.student_name }} - {{ $json.city }}",
+        "message": "=<h2 style='color:#e67e22'>Student Complaint — Standard Priority</h2>\n<table border='1' cellpadding='8' cellspacing='0' style='border-collapse:collapse;font-family:Arial;width:100%'>\n<tr><td><b>Ticket ID</b></td><td>{{ $json.ticket_id }}</td></tr>\n<tr><td><b>Student</b></td><td>{{ $json.student_name }}</td></tr>\n<tr><td><b>City</b></td><td>{{ $json.city }}</td></tr>\n<tr><td><b>Target Exam</b></td><td>{{ $json.target_exam }}</td></tr>\n<tr><td><b>PCM %</b></td><td>{{ $json.pcm_percentage }}%</td></tr>\n<tr><td><b>Severity</b></td><td>{{ $json.severity }}</td></tr>\n<tr><td><b>Complaint</b></td><td>{{ $json.complaint_message }}</td></tr>\n<tr><td><b>Category</b></td><td>{{ $json.complaint_category }}</td></tr>\n<tr><td><b>Raised At</b></td><td>{{ $json.raised_at_readable }}</td></tr>\n<tr><td><b>Resolution Due</b></td><td>{{ $json.resolution_due }}</td></tr>\n</table>\n<br>\n<p>Please resolve this complaint within 24 hours. Update ticket status in the GrowthDesk dashboard once done.</p>",
+        "options": { "appendAttribution": false }
+      },
+      "id": "node-email-standard-complaint",
+      "name": "Email - Standard Complaint",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [940, 600],
+      "credentials": { "gmailOAuth2": { "id": "gmail-cred-1", "name": "Gmail GrowthDesk" } }
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $json.student_email }}",
+        "subject": "=We've received your complaint | {{ $json.ticket_id }} | GrowthDesk",
+        "message": "=<h2 style='color:#2980b9'>Hi {{ $json.student_name }}, we hear you.</h2>\n<p>We're sorry to hear you've had an issue. Your complaint has been received and our senior support team has been notified. We take every complaint seriously and will make this right. 🙏</p>\n<table border='1' cellpadding='8' cellspacing='0' style='border-collapse:collapse;font-family:Arial'>\n<tr><td><b>Ticket ID</b></td><td><b>{{ $json.ticket_id }}</b></td></tr>\n<tr><td><b>Status</b></td><td>Escalated to Support Team</td></tr>\n<tr><td><b>Expected Response</b></td><td>Within 2 hours</td></tr>\n<tr><td><b>Raised At</b></td><td>{{ $json.raised_at_readable }}</td></tr>\n</table>\n<br>\n<p>While we resolve this, please don't let it affect your {{ $json.target_exam }} preparation. You're working hard and we want to support you fully. 💪</p>\n<p>If urgent, reply to this email directly.</p>\n<br><p>Best wishes,<br><b>GrowthDesk Student Support Team</b></p>",
+        "options": { "appendAttribution": false }
+      },
+      "id": "node-email-student-complaint-ack",
+      "name": "Email Student - Complaint Acknowledgement",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [1180, 460],
+      "credentials": { "gmailOAuth2": { "id": "gmail-cred-1", "name": "Gmail GrowthDesk" } }
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [{ "field": "hours", "hoursInterval": 1 }]
+        }
+      },
+      "id": "node-cron-pattern",
+      "name": "Cron - Pattern Check Every Hour",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [240, 760],
+      "notes": "Checks every hour for repeated complaint patterns — e.g. 5+ complaints of same type."
+    },
+    {
+      "parameters": {
+        "jsCode": "// Replace with Postgres node in production\n// Query: SELECT complaint_category, COUNT(*) as count FROM tickets\n// WHERE query_type='Complaint' AND raised_at > NOW() - INTERVAL '24 hours'\n// GROUP BY complaint_category HAVING COUNT(*) > 5\nconst now = new Date();\nconst mockPatterns = [\n  { complaint_category: 'Faculty Quality', count: 7, threshold_breached: true },\n  { complaint_category: 'Batch Timing', count: 3, threshold_breached: false }\n];\nconst breached = mockPatterns.filter(p => p.threshold_breached);\nreturn [{\n  json: {\n    check_time: now.toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' }),\n    patterns_detected: breached.length > 0,\n    breached_patterns: breached,\n    all_patterns: mockPatterns,\n    db_query: \"SELECT complaint_category, COUNT(*) as count FROM tickets WHERE query_type='Complaint' AND raised_at > NOW() - INTERVAL '24 hours' GROUP BY complaint_category HAVING COUNT(*) > 5\"\n  }\n}];"
+      },
+      "id": "node-detect-pattern",
+      "name": "Detect Complaint Patterns (DB)",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [460, 760],
+      "notes": "Replace with Postgres node. Detects when same complaint type spikes above threshold."
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {},
+          "conditions": [
+            {
+              "id": "cond-pattern",
+              "leftValue": "={{ $json.patterns_detected }}",
+              "rightValue": true,
+              "operator": { "type": "boolean", "operation": "true" }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "node-if-pattern",
+      "name": "Pattern Detected?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [700, 760]
+    },
+    {
+      "parameters": {
+        "sendTo": "admin@yourdomain.com",
+        "subject": "=🔴 COMPLAINT PATTERN ALERT | Service Issue Building | GrowthDesk",
+        "message": "=<h2 style='color:#c0392b'>Complaint Pattern Detected — Immediate Action Required</h2>\n<p style='background:#fdedec;padding:10px;border-left:4px solid #e74c3c'>The same type of complaint has been raised by multiple students in the last 24 hours. This is a systemic issue — not an isolated case.</p>\n<p><b>Check Time:</b> {{ $json.check_time }}</p>\n<br>\n<h3>Patterns Breaching Threshold (5+ complaints):</h3>\n<table border='1' cellpadding='8' cellspacing='0' style='border-collapse:collapse;font-family:Arial;width:100%'>\n<tr style='background:#f2f2f2'><th>Complaint Type</th><th>Count (Last 24hrs)</th><th>Status</th></tr>\n{{ $json.breached_patterns.map(p => `<tr><td>${p.complaint_category}</td><td style='color:#c0392b'><b>${p.count}</b></td><td>URGENT</td></tr>`).join('') }}\n</table>\n<br>\n<p><b>DB Query to investigate:</b><br><code>{{ $json.db_query }}</code></p>\n<br>\n<p><b>Recommended Actions:</b></p>\n<ul>\n<li>Senior Support: Review all open complaints of this type immediately</li>\n<li>Operations Lead: Log this as a systemic issue in PMO tracker</li>\n<li>Content Team: Pause any content that references the affected area</li>\n<li>Legal Team: May need legal/compliance review if faculty-related</li>\n</ul>",
+        "options": { "appendAttribution": false }
+      },
+      "id": "node-email-pattern-alert",
+      "name": "Email Team - Pattern Alert",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [940, 680],
+      "credentials": { "gmailOAuth2": { "id": "gmail-cred-1", "name": "Gmail GrowthDesk" } }
+    },
+    {
+      "parameters": {
+        "jsCode": "console.log('[GrowthDesk] No complaint pattern breach detected at', new Date().toISOString());\nreturn [{ json: { status: 'no_pattern', checked_at: new Date().toISOString() } }];"
+      },
+      "id": "node-no-pattern",
+      "name": "Log - No Pattern",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [940, 860]
+    }
+  ],
+  "connections": {
+    "Webhook - Receive Complaint": {
+      "main": [[
+        { "node": "Respond to Chatbot", "type": "main", "index": 0 },
+        { "node": "Prepare Complaint Data", "type": "main", "index": 0 }
+      ]]
+    },
+    "Prepare Complaint Data": {
+      "main": [[{ "node": "High Value Student?", "type": "main", "index": 0 }]]
+    },
+    "High Value Student?": {
+      "main": [
+        [{ "node": "Email - Urgent Complaint (High Value)", "type": "main", "index": 0 }],
+        [{ "node": "Email - Standard Complaint", "type": "main", "index": 0 }]
+      ]
+    },
+    "Email - Urgent Complaint (High Value)": {
+      "main": [[{ "node": "Email Student - Complaint Acknowledgement", "type": "main", "index": 0 }]]
+    },
+    "Email - Standard Complaint": {
+      "main": [[{ "node": "Email Student - Complaint Acknowledgement", "type": "main", "index": 0 }]]
+    },
+    "Cron - Pattern Check Every Hour": {
+      "main": [[{ "node": "Detect Complaint Patterns (DB)", "type": "main", "index": 0 }]]
+    },
+    "Detect Complaint Patterns (DB)": {
+      "main": [[{ "node": "Pattern Detected?", "type": "main", "index": 0 }]]
+    },
+    "Pattern Detected?": {
+      "main": [
+        [{ "node": "Email Team - Pattern Alert", "type": "main", "index": 0 }],
+        [{ "node": "Log - No Pattern", "type": "main", "index": 0 }]
+      ]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "tags": ["GrowthDesk", "Complaint", "Escalation", "EdTech"],
+  "versionId": "growthdesk-complaint-v1"
+}

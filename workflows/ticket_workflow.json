@@ -1,0 +1,604 @@
+{
+  "name": "GrowthDesk - Ticket Follow-up & Resolution Loop",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "growthdesk-ticket",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "node-webhook-1",
+      "name": "Webhook - Receive Ticket",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        240,
+        340
+      ],
+      "webhookId": "growthdesk-ticket-001",
+      "notes": "Entry point. Chatbot POSTs here when a student raises any ticket."
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ status: 'received', ticket_id: $json.ticket_id, message: 'Ticket logged successfully' }) }}",
+        "options": {}
+      },
+      "id": "node-respond-1",
+      "name": "Respond to Chatbot",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        460,
+        220
+      ],
+      "notes": "Immediately ACK the chatbot so it does not hang."
+    },
+    {
+      "parameters": {
+        "jsCode": "const body = $input.first().json.body || $input.first().json;\nconst now = new Date();\nconst ticketId = body.ticket_id || ('TKT-' + Date.now().toString().slice(-6));\nreturn [{\n  json: {\n    ticket_id: ticketId,\n    student_name: body.student_name || 'Unknown Student',\n    student_email: body.student_email || '',\n    city: body.city || 'Unknown',\n    target_exam: body.target_exam || 'JEE/CET',\n    query_type: body.query_type || 'General',\n    message: body.message || '',\n    status: 'Open',\n    raised_at: now.toISOString(),\n    raised_at_readable: now.toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' }),\n    follow_up_due: new Date(now.getTime() + 2 * 60 * 60 * 1000).toISOString(),\n    resolution_due: new Date(now.getTime() + 24 * 60 * 60 * 1000).toISOString(),\n    is_complaint: (body.query_type || '').toLowerCase() === 'complaint',\n    is_human_request: (body.query_type || '').toLowerCase() === 'human request',\n    source: body.source || 'Chatbot'\n  }\n}];"
+      },
+      "id": "node-prepare-1",
+      "name": "Prepare Ticket Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        460,
+        460
+      ],
+      "notes": "Normalises incoming payload and computes due timestamps."
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false
+          },
+          "conditions": [
+            {
+              "id": "cond-complaint",
+              "leftValue": "={{ $json.query_type }}",
+              "rightValue": "Complaint",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "id": "node-if-complaint",
+      "name": "Is Complaint?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        700,
+        460
+      ],
+      "notes": "Routes complaints to priority path; all others go to standard path."
+    },
+    {
+      "parameters": {
+        "sendTo": "admin@yourdomain.com",
+        "subject": "=\ud83d\udea8 COMPLAINT RAISED | {{ $json.ticket_id }} | {{ $json.student_name }} - {{ $json.city }}",
+        "message": "=<h2 style='color:#c0392b'>Complaint Ticket Raised</h2>\n<table border='1' cellpadding='8' cellspacing='0' style='border-collapse:collapse;font-family:Arial'>\n<tr><td><b>Ticket ID</b></td><td>{{ $json.ticket_id }}</td></tr>\n<tr><td><b>Student</b></td><td>{{ $json.student_name }}</td></tr>\n<tr><td><b>City</b></td><td>{{ $json.city }}</td></tr>\n<tr><td><b>Exam</b></td><td>{{ $json.target_exam }}</td></tr>\n<tr><td><b>Query Type</b></td><td>{{ $json.query_type }}</td></tr>\n<tr><td><b>Message</b></td><td>{{ $json.message }}</td></tr>\n<tr><td><b>Raised At</b></td><td>{{ $json.raised_at_readable }}</td></tr>\n<tr><td><b>Follow-up Due</b></td><td>Within 2 hours</td></tr>\n<tr><td><b>Resolution Due</b></td><td>Within 24 hours</td></tr>\n</table>\n<br><p style='color:#e74c3c'><b>Action Required:</b> Please contact this student within 2 hours. This is a complaint ticket and directly impacts satisfaction score.</p>\n<p>Reply to this email with resolution notes or update the ticket in GrowthDesk dashboard.</p>",
+        "options": {
+          "allowUnauthorizedCerts": false,
+          "appendAttribution": false,
+          "replyTo": "admin@yourdomain.com"
+        }
+      },
+      "id": "node-email-complaint",
+      "name": "Email Team - Complaint Alert",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        940,
+        320
+      ],
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "gmail-cred-1",
+          "name": "Gmail GrowthDesk"
+        }
+      },
+      "notes": "Sends priority alert email to support team for complaints."
+    },
+    {
+      "parameters": {
+        "sendTo": "admin@yourdomain.com",
+        "subject": "=\ud83d\udccb New Ticket | {{ $json.ticket_id }} | {{ $json.query_type }} | {{ $json.student_name }}",
+        "message": "=<h2 style='color:#2980b9'>New Support Ticket</h2>\n<table border='1' cellpadding='8' cellspacing='0' style='border-collapse:collapse;font-family:Arial'>\n<tr><td><b>Ticket ID</b></td><td>{{ $json.ticket_id }}</td></tr>\n<tr><td><b>Student</b></td><td>{{ $json.student_name }}</td></tr>\n<tr><td><b>City</b></td><td>{{ $json.city }}</td></tr>\n<tr><td><b>Exam</b></td><td>{{ $json.target_exam }}</td></tr>\n<tr><td><b>Query Type</b></td><td>{{ $json.query_type }}</td></tr>\n<tr><td><b>Message</b></td><td>{{ $json.message }}</td></tr>\n<tr><td><b>Raised At</b></td><td>{{ $json.raised_at_readable }}</td></tr>\n<tr><td><b>Resolution Due</b></td><td>Within 24 hours</td></tr>\n</table>\n<br><p>Please review and respond to this ticket within 24 hours to maintain our service standards.</p>",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "id": "node-email-standard",
+      "name": "Email Team - Standard Ticket",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        940,
+        600
+      ],
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "gmail-cred-1",
+          "name": "Gmail GrowthDesk"
+        }
+      },
+      "notes": "Sends standard notification for Fees, Timing, General queries."
+    },
+    {
+      "parameters": {
+        "sendTo": "admin@yourdomain.com",
+        "subject": "=Your Support Request Received | {{ $json.ticket_id }} | GrowthDesk",
+        "message": "=<h2 style='color:#27ae60'>Hi {{ $json.student_name }},</h2>\n<p>We've received your support request and your ticket has been created successfully. You're in good hands! \ud83c\udf93</p>\n<table border='1' cellpadding='8' cellspacing='0' style='border-collapse:collapse;font-family:Arial'>\n<tr><td><b>Ticket ID</b></td><td><b>{{ $json.ticket_id }}</b></td></tr>\n<tr><td><b>Query Type</b></td><td>{{ $json.query_type }}</td></tr>\n<tr><td><b>Status</b></td><td>Open \u2014 Team Notified</td></tr>\n<tr><td><b>Expected Response</b></td><td>Within {{ $json.is_complaint ? '2 hours' : '24 hours' }}</td></tr>\n</table>\n<br><p>While you wait, keep up your {{ $json.target_exam }} preparation! Consistency is the key to cracking it. \ud83d\udcaa</p>\n<p>If you have anything urgent, reply to this email directly.</p>\n<br><p>Best wishes,<br><b>GrowthDesk Student Support Team</b></p>",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "id": "node-email-student-ack",
+      "name": "Email Student - Acknowledgement",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        1180,
+        460
+      ],
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "gmail-cred-1",
+          "name": "Gmail GrowthDesk"
+        }
+      },
+      "notes": "Sends acknowledgement to student confirming ticket receipt."
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours",
+              "hoursInterval": 1
+            }
+          ]
+        }
+      },
+      "id": "node-cron-followup",
+      "name": "Cron - Check Pending Every Hour",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        240,
+        760
+      ],
+      "notes": "Runs every hour to check for tickets that have breached SLA."
+    },
+    {
+      "parameters": {
+        "jsCode": "// Simulates fetching pending tickets from DB\n// Replace this with actual DB node (Postgres/Firebase) in production\nconst now = new Date();\nconst twoHoursAgo = new Date(now.getTime() - 2 * 60 * 60 * 1000);\nconst twentyFourHoursAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);\n\n// In production: query your DB for tickets where status='Open'\n// Example Postgres query:\n// SELECT * FROM tickets WHERE status='Open' AND raised_at < NOW() - INTERVAL '2 hours'\n\n// Returning mock structure for demo \u2014 replace with real DB node output\nreturn [{\n  json: {\n    check_time: now.toISOString(),\n    check_time_readable: now.toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' }),\n    query: \"SELECT ticket_id, student_name, student_email, city, query_type, message, raised_at FROM tickets WHERE status='Open' AND raised_at < NOW() - INTERVAL '2 hours'\",\n    note: 'Replace this node with Postgres node connected to your GrowthDesk DB'\n  }\n}];"
+      },
+      "id": "node-fetch-pending",
+      "name": "Fetch Pending Tickets (DB)",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        460,
+        760
+      ],
+      "notes": "Replace with Postgres/Firebase node. Query: SELECT * FROM tickets WHERE status=Open AND raised_at < NOW()-2hrs"
+    },
+    {
+      "parameters": {
+        "sendTo": "admin@yourdomain.com",
+        "subject": "=\u23f0 SLA BREACH WARNING | Pending Tickets Need Attention | GrowthDesk",
+        "message": "=<h2 style='color:#e67e22'>Pending Ticket SLA Alert</h2>\n<p>The following tickets have been open for more than 2 hours and need immediate attention:</p>\n<p><b>Check Time:</b> {{ $json.check_time_readable }}</p>\n<br>\n<p style='background:#fef9e7;padding:10px;border-left:4px solid #f39c12'>\n<b>DB Query to run:</b><br>\n<code>{{ $json.query }}</code>\n</p>\n<br>\n<p><b>Action Required:</b></p>\n<ul>\n<li>Review all open tickets in your GrowthDesk dashboard</li>\n<li>Prioritise complaint tickets first</li>\n<li>Send resolution email to students</li>\n<li>Update ticket status to Resolved in DB</li>\n</ul>\n<p>Average satisfaction score drops below 3.0 when tickets are not resolved within SLA. Let's keep our students happy! \ud83c\udfaf</p>",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "id": "node-email-sla",
+      "name": "Email Team - SLA Breach Alert",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        700,
+        760
+      ],
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "gmail-cred-1",
+          "name": "Gmail GrowthDesk"
+        }
+      },
+      "notes": "Hourly SLA breach alert to team for all overdue open tickets."
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "growthdesk-resolve",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "node-webhook-resolve",
+      "name": "Webhook - Mark Ticket Resolved",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        240,
+        980
+      ],
+      "webhookId": "growthdesk-resolve-001",
+      "notes": "Team hits this endpoint when they resolve a ticket. POST: ticket_id, resolution_notes, resolved_by"
+    },
+    {
+      "parameters": {
+        "jsCode": "const body = $input.first().json.body || $input.first().json;\nconst now = new Date();\nreturn [{\n  json: {\n    ticket_id: body.ticket_id,\n    resolution_notes: body.resolution_notes || 'Issue resolved by support team.',\n    resolved_by: body.resolved_by || 'Support Team',\n    student_name: body.student_name || 'Student',\n    student_email: body.student_email || '',\n    query_type: body.query_type || 'General',\n    target_exam: body.target_exam || 'JEE/CET',\n    resolved_at: now.toISOString(),\n    resolved_at_readable: now.toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' }),\n    satisfaction_request_url: 'https://your-growthdesk-domain.com/feedback?ticket=' + body.ticket_id\n  }\n}];"
+      },
+      "id": "node-prepare-resolve",
+      "name": "Prepare Resolution Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        460,
+        980
+      ],
+      "notes": "Normalises resolution payload before sending emails."
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ status: 'resolved', ticket_id: $json.ticket_id, message: 'Resolution emails sent' }) }}",
+        "options": {}
+      },
+      "id": "node-respond-resolve",
+      "name": "Respond - Resolution ACK",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        460,
+        860
+      ],
+      "notes": "ACKs the resolution webhook immediately."
+    },
+    {
+      "parameters": {
+        "sendTo": "admin@yourdomain.com",
+        "subject": "=Your ticket {{ $json.ticket_id }} has been resolved | GrowthDesk",
+        "message": "=<h2 style='color:#27ae60'>Hi {{ $json.student_name }}, your issue is resolved! \u2705</h2>\n<p>Great news \u2014 your support ticket has been resolved by our team. Here are the details:</p>\n<table border='1' cellpadding='8' cellspacing='0' style='border-collapse:collapse;font-family:Arial'>\n<tr><td><b>Ticket ID</b></td><td>{{ $json.ticket_id }}</td></tr>\n<tr><td><b>Resolved At</b></td><td>{{ $json.resolved_at_readable }}</td></tr>\n<tr><td><b>Resolved By</b></td><td>{{ $json.resolved_by }}</td></tr>\n<tr><td><b>Resolution</b></td><td>{{ $json.resolution_notes }}</td></tr>\n</table>\n<br>\n<p>We'd love to hear how we did! Please take 10 seconds to rate your experience:</p>\n<p>\n<a href='{{ $json.satisfaction_request_url }}&score=5' style='background:#27ae60;color:white;padding:8px 16px;text-decoration:none;border-radius:4px;margin-right:8px'>\u2b50\u2b50\u2b50\u2b50\u2b50 Excellent</a>\n<a href='{{ $json.satisfaction_request_url }}&score=3' style='background:#f39c12;color:white;padding:8px 16px;text-decoration:none;border-radius:4px;margin-right:8px'>\u2b50\u2b50\u2b50 OK</a>\n<a href='{{ $json.satisfaction_request_url }}&score=1' style='background:#e74c3c;color:white;padding:8px 16px;text-decoration:none;border-radius:4px'>\u2b50 Poor</a>\n</p>\n<br>\n<p>Keep going strong with your {{ $json.target_exam }} preparation! You're closer than you think. \ud83d\udcaa</p>\n<p>Best wishes,<br><b>GrowthDesk Student Support Team</b></p>",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "id": "node-email-resolved-student",
+      "name": "Email Student - Resolution + Feedback",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        700,
+        980
+      ],
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "gmail-cred-1",
+          "name": "Gmail GrowthDesk"
+        }
+      },
+      "notes": "Sends resolution confirmation + satisfaction score request to student."
+    },
+    {
+      "parameters": {
+        "httpMethod": "GET",
+        "path": "growthdesk-feedback",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "node-webhook-feedback",
+      "name": "Webhook - Capture Satisfaction Score",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        240,
+        1180
+      ],
+      "webhookId": "growthdesk-feedback-001",
+      "notes": "Student clicks rating link in email. GET params: ticket_id, score"
+    },
+    {
+      "parameters": {
+        "jsCode": "const params = $input.first().json.query || $input.first().json;\nconst score = parseInt(params.score || 3);\nconst ticketId = params.ticket || params.ticket_id || 'Unknown';\nconst now = new Date();\nreturn [{\n  json: {\n    ticket_id: ticketId,\n    satisfaction_score: score,\n    score_label: score >= 4 ? 'Excellent' : score === 3 ? 'Neutral' : 'Poor',\n    needs_followup: score <= 2,\n    logged_at: now.toISOString(),\n    logged_at_readable: now.toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' }),\n    db_query: `UPDATE tickets SET satisfaction_score=${score}, status='Resolved' WHERE ticket_id='${ticketId}'`\n  }\n}];"
+      },
+      "id": "node-process-feedback",
+      "name": "Process Satisfaction Score",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        460,
+        1180
+      ],
+      "notes": "Parses score from URL params. Updates DB. Triggers follow-up if score <= 2."
+    },
+    {
+      "parameters": {
+        "respondWith": "text",
+        "responseBody": "=Thank you for your feedback! Score: {{ $json.satisfaction_score }}/5. Your response helps us improve our support for all JEE & CET students.",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "id": "node-respond-feedback",
+      "name": "Respond - Thank You Page",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        460,
+        1080
+      ],
+      "notes": "Shows thank you message when student clicks feedback link."
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {},
+          "conditions": [
+            {
+              "id": "cond-poor",
+              "leftValue": "={{ $json.needs_followup }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "node-if-poor",
+      "name": "Score <= 2 (Poor)?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        700,
+        1180
+      ],
+      "notes": "If satisfaction score is 1 or 2, triggers team alert for follow-up."
+    },
+    {
+      "parameters": {
+        "sendTo": "admin@yourdomain.com",
+        "subject": "=\u26a0\ufe0f POOR SATISFACTION SCORE | {{ $json.ticket_id }} | Score: {{ $json.satisfaction_score }}/5",
+        "message": "=<h2 style='color:#e74c3c'>Poor Satisfaction Score Alert</h2>\n<p>A student has rated their support experience as <b>{{ $json.score_label }} ({{ $json.satisfaction_score }}/5)</b>. Immediate follow-up required.</p>\n<table border='1' cellpadding='8' cellspacing='0' style='border-collapse:collapse;font-family:Arial'>\n<tr><td><b>Ticket ID</b></td><td>{{ $json.ticket_id }}</td></tr>\n<tr><td><b>Score</b></td><td>{{ $json.satisfaction_score }}/5 \u2014 {{ $json.score_label }}</td></tr>\n<tr><td><b>Logged At</b></td><td>{{ $json.logged_at_readable }}</td></tr>\n<tr><td><b>DB Update Query</b></td><td><code>{{ $json.db_query }}</code></td></tr>\n</table>\n<br>\n<p style='background:#fdedec;padding:10px;border-left:4px solid #e74c3c'>\n<b>Required Action:</b> Please reach out to this student personally within 1 hour. Our current avg satisfaction is 2.9/5 \u2014 we need to recover this ticket. A personal call or WhatsApp message goes a long way.\n</p>\n<p>Senior Support / Operations Lead \u2014 please coordinate on this one.</p>",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "id": "node-email-poor-score",
+      "name": "Email Team - Poor Score Alert",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        940,
+        1100
+      ],
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "gmail-cred-1",
+          "name": "Gmail GrowthDesk"
+        }
+      },
+      "notes": "Alerts Senior Support and Operations Lead when a student gives 1 or 2 star rating."
+    },
+    {
+      "parameters": {
+        "jsCode": "// Log score to DB \u2014 replace with Postgres node in production\nconst data = $input.first().json;\nconsole.log(`[GrowthDesk] Score logged: Ticket=${data.ticket_id}, Score=${data.satisfaction_score}`);\nreturn [{\n  json: {\n    logged: true,\n    ticket_id: data.ticket_id,\n    score: data.satisfaction_score,\n    db_query: data.db_query,\n    note: 'Connect a Postgres node here. Run: ' + data.db_query\n  }\n}];"
+      },
+      "id": "node-log-score",
+      "name": "Log Score to DB",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        940,
+        1280
+      ],
+      "notes": "Replace with Postgres node. Runs UPDATE tickets SET satisfaction_score=X WHERE ticket_id=Y"
+    }
+  ],
+  "connections": {
+    "Webhook - Receive Ticket": {
+      "main": [
+        [
+          {
+            "node": "Respond to Chatbot",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Prepare Ticket Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Ticket Data": {
+      "main": [
+        [
+          {
+            "node": "Is Complaint?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is Complaint?": {
+      "main": [
+        [
+          {
+            "node": "Email Team - Complaint Alert",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Email Team - Standard Ticket",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Email Team - Complaint Alert": {
+      "main": [
+        [
+          {
+            "node": "Email Student - Acknowledgement",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Email Team - Standard Ticket": {
+      "main": [
+        [
+          {
+            "node": "Email Student - Acknowledgement",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Cron - Check Pending Every Hour": {
+      "main": [
+        [
+          {
+            "node": "Fetch Pending Tickets (DB)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Pending Tickets (DB)": {
+      "main": [
+        [
+          {
+            "node": "Email Team - SLA Breach Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook - Mark Ticket Resolved": {
+      "main": [
+        [
+          {
+            "node": "Respond - Resolution ACK",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Prepare Resolution Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Resolution Data": {
+      "main": [
+        [
+          {
+            "node": "Email Student - Resolution + Feedback",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook - Capture Satisfaction Score": {
+      "main": [
+        [
+          {
+            "node": "Respond - Thank You Page",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Process Satisfaction Score",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Process Satisfaction Score": {
+      "main": [
+        [
+          {
+            "node": "Score <= 2 (Poor)?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Score <= 2 (Poor)?": {
+      "main": [
+        [
+          {
+            "node": "Email Team - Poor Score Alert",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Log Score to DB",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Email Team - Poor Score Alert": {
+      "main": [
+        [
+          {
+            "node": "Log Score to DB",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner",
+    "errorWorkflow": ""
+  },
+  "staticData": null,
+  "tags": [
+    "GrowthDesk",
+    "Customer Support",
+    "EdTech",
+    "JEE",
+    "CET"
+  ],
+  "triggerCount": 3,
+  "updatedAt": "2026-03-31T00:00:00.000Z",
+  "versionId": "growthdesk-v1"
+}
